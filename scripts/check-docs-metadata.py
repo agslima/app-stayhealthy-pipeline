@@ -11,9 +11,13 @@ from pathlib import Path
 TARGETS = [
     "docs/README.md",
     "docs/architecture.md",
+    "docs/build-l3-checklist-and-patch-plan.md",
+    "docs/builder-isolation-assumptions.md",
     "docs/decisions.md",
     "docs/runbook.md",
     "docs/remediation-plan.md",
+    "docs/reproducibility-pilot-backend.md",
+    "docs/trusted-workflow-input-inventory.md",
     "docs/slsa-l3-sequencing-plan.md",
     "docs/slsa-l3-pilot-retrospective.md",
     "docs/adr/001-gitops-strategy.md",

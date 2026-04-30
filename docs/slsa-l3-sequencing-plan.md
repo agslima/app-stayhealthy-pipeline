@@ -8,6 +8,8 @@ This document turns the repository's existing "L3-aligned controls in progress" 
 
 It is intentionally scoped to the build-track gaps already acknowledged in [`docs/governance.md`](governance.md#slsa-level-review-and-requirement-mapping): hermeticity, reproducibility, build isolation, and dependency provenance.
 
+For a workflow-by-workflow implementation checklist tied to the active repo configuration, see [`docs/build-l3-checklist-and-patch-plan.md`](build-l3-checklist-and-patch-plan.md).
+
 ## Objective and Scope
 
 Objective:
@@ -60,7 +62,7 @@ establish an auditable baseline for dependency provenance without changing relea
 | Control | Owner | Dependencies | Validation method | Rollback path |
 | :--- | :--- | :--- | :--- | :--- |
 | Pilot high-trust workflow input provenance check | Project Maintainers | Python 3 + `PyYAML`; access to `.github/workflows/ci-release-gate.yml` and `.github/workflows/gitops-enforce.yml` | Run `python3 scripts/check-workflow-input-provenance.py`; confirm all third-party action refs are full-SHA pinned and OCI image refs are digest-pinned; regression coverage in `scripts/tests/test_workflow_input_provenance.py` | Remove the standalone script and documentation references if it creates noise or false positives; no workflow rollback is required because enforcement is not yet wired into CI. |
-| Record approved exceptions for mutable installer sources | Project Maintainers with Security Reviewer sign-off | Pilot output; review of installer URLs used by release workflows | Manual review captured in roadmap approval and quarterly governance review | Revert the exception inventory entries and keep the current documented posture if the exception model is too coarse. |
+| Record approved exceptions for mutable installer sources | Project Maintainers with Security Reviewer sign-off | Pilot output; review of installer URLs used by release workflows | Manual review captured in [`docs/trusted-workflow-input-inventory.md`](trusted-workflow-input-inventory.md) and quarterly governance review | Revert the exception inventory entries and keep the current documented posture if the exception model is too coarse. |
 
 ### Phase 1: 30 to 60 days
 
@@ -79,7 +81,7 @@ add the first reproducibility evidence and constrain mutable build inputs furthe
 
 | Control | Owner | Dependencies | Validation method | Rollback path |
 | :--- | :--- | :--- | :--- | :--- |
-| Add a rebuild-and-compare reproducibility job for one release image | Project Maintainers with Security Reviewer review | Phase 1 provenance guardrail; agreed reproducibility threshold; acceptable CI runtime budget | Compare rebuild digest or normalized build output from the same ref; record pass/fail evidence in workflow artifacts | Disable the extra reproducibility job and preserve artifact signing on the existing path if the comparison is too flaky or exceeds runtime budget. |
+| Add a rebuild-and-compare reproducibility job for one release image | Project Maintainers with Security Reviewer review | Phase 1 provenance guardrail; agreed reproducibility threshold; acceptable CI runtime budget | The release workflow now runs `reproducibility-pilot-backend` as a non-blocking pilot and uploads artifact `reproducibility-pilot-backend`; use `report.json` and `summary.md` to classify pass or mismatch before considering any blocking rollout | Disable the extra reproducibility job and preserve artifact signing on the existing path if the comparison is too flaky or exceeds runtime budget. |
 | Document allowed network egress and mutable inputs for trusted build steps | Project Maintainers | Current release workflow inventory; reproducibility pilot results | Governance doc review plus dry-run verification that the documented inputs match workflow behavior | Revert the documented constraint set if it proves materially incomplete; do not weaken existing release gates. |
 
 ### Phase 3: 90+ days

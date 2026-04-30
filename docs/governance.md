@@ -340,6 +340,8 @@ Why this statement is defensible:
 - runtime and GitOps verification validate signature and required attestations, including explicit SLSA builder identity, predicate type, build type, workflow entry point, and tag-based source expectations, before promotion or deployment
 - some SLSA L3 expectations, such as independently validated hermetic or reproducible builds, are not yet fully evidenced in this repository
 
+Current builder-isolation assumptions and the explicit non-claims for hosted-runner trust are documented in [`docs/builder-isolation-assumptions.md`](builder-isolation-assumptions.md).
+
 The active sequencing and pilot record for those remaining L3-aligned controls live in [`docs/slsa-l3-sequencing-plan.md`](slsa-l3-sequencing-plan.md) and [`docs/slsa-l3-pilot-retrospective.md`](slsa-l3-pilot-retrospective.md).
 
 | SLSA requirement (build track) | Implemented control | Evidence source / workflow artifact |

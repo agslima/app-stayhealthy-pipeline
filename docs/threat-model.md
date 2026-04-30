@@ -73,6 +73,8 @@ The security model follows a zero-trust posture for delivery:
 2. Build provenance ties artifact to workflow/run/commit.
 3. Verification catches provenance mismatch from untrusted build context.
 
+Current builder-isolation assumptions, residual risks, and non-claims are documented in [`builder-isolation-assumptions.md`](builder-isolation-assumptions.md).
+
 ## Residual Risks
 
 - **Zero-day vulnerabilities:** Gitleaks/Trivy/ZAP detect known patterns and behaviors only.
