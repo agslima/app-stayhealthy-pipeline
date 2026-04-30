@@ -18,7 +18,7 @@ def load_module(name: str, path: pathlib.Path):
     Load a Python module from a filesystem path and register it in sys.modules.
     
     Parameters:
-        name (str): The import name to assign to the loaded module in sys.modules.
+        name (str): Import name to assign to the loaded module in sys.modules.
         path (pathlib.Path): Filesystem path to the source file to load.
     
     Returns:

@@ -14,10 +14,10 @@ from typing import Any
 
 def fail(message: str) -> None:
     """
-    Emit a formatted error message to stderr and terminate the program with exit code 1.
+    Print an error to stderr prefixed with "::error::" and exit the program with status code 1.
     
     Parameters:
-        message (str): The error message text; it is printed to stderr prefixed with "::error::".
+        message (str): Text of the error message to print (will be prefixed with "::error::").
     
     Raises:
         SystemExit: Exits with status code 1.
@@ -28,10 +28,7 @@ def fail(message: str) -> None:
 
 def file_sha256(path: Path) -> str:
     """
-    Compute the SHA-256 digest of a file's contents.
-    
-    Parameters:
-        path (Path): Path to the file to hash.
+    Compute the SHA-256 hexadecimal digest of a file.
     
     Returns:
         hex_digest (str): Hexadecimal SHA-256 digest of the file contents.
