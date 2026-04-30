@@ -13,11 +13,29 @@ from typing import Any
 
 
 def fail(message: str) -> None:
+    """
+    Emit a formatted error message to stderr and terminate the program with exit code 1.
+    
+    Parameters:
+        message (str): The error message text; it is printed to stderr prefixed with "::error::".
+    
+    Raises:
+        SystemExit: Exits with status code 1.
+    """
     print(f"::error::{message}", file=sys.stderr)
     raise SystemExit(1)
 
 
 def file_sha256(path: Path) -> str:
+    """
+    Compute the SHA-256 digest of a file's contents.
+    
+    Parameters:
+        path (Path): Path to the file to hash.
+    
+    Returns:
+        hex_digest (str): Hexadecimal SHA-256 digest of the file contents.
+    """
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
@@ -26,6 +44,21 @@ def file_sha256(path: Path) -> str:
 
 
 def extract_manifest_info(archive_path: Path) -> dict[str, Any]:
+    """
+    Extract manifest digest, platform, and reference name from an OCI image archive's index.json.
+    
+    Parameters:
+        archive_path (Path): Path to the OCI image archive tar file to inspect.
+    
+    Returns:
+        info (dict[str, Any]): A dictionary with:
+            - manifest_digest (str): The manifest `sha256:` digest from the first manifest entry.
+            - platform (str): A string formatted as `os/architecture` when available, otherwise `"unknown"`.
+            - ref_name (str): The `org.opencontainers.image.ref.name` annotation value, or an empty string if absent.
+    
+    Notes:
+        This function calls `fail(...)` (which exits the program) if the archive cannot be opened, if `index.json` is missing or unreadable, if `manifests` is not a non-empty list, or if the first manifest's digest is missing or not a `sha256:` string.
+    """
     try:
         with tarfile.open(archive_path, "r") as archive:
             try:
@@ -77,6 +110,20 @@ def write_report(
     first_info: dict[str, Any],
     second_info: dict[str, Any],
 ) -> tuple[Path, Path, str]:
+    """
+    Create a reproducibility report and human-readable summary comparing two OCI archive manifests.
+    
+    Parameters:
+        output_dir (Path): Directory where `report.json` and `summary.md` will be written; created if missing.
+        image_name (str): Image identifier included in the report and summary.
+        first_path (Path): Filesystem path to the first OCI archive.
+        second_path (Path): Filesystem path to the second OCI archive.
+        first_info (dict): Manifest metadata for the first archive. Expected keys: `manifest_digest` (str, starts with "sha256:"), `platform` (str, e.g., "linux/amd64" or "unknown"), and `ref_name` (str).
+        second_info (dict): Manifest metadata for the second archive with the same expected keys as `first_info`.
+    
+    Returns:
+        tuple[Path, Path, str]: A tuple containing the path to `report.json`, the path to `summary.md`, and the comparison `status` which is `"pass"` when the two `manifest_digest` values match or `"mismatch"` otherwise.
+    """
     status = "pass" if first_info["manifest_digest"] == second_info["manifest_digest"] else "mismatch"
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -136,6 +183,19 @@ def write_report(
 
 
 def parse_args() -> argparse.Namespace:
+    """
+    Parse and validate command-line arguments for the reproducibility report tool.
+    
+    Defines and requires the following CLI options:
+        --image-name (str): Logical name of the image being compared.
+        --first-archive (Path): Path to the first OCI image archive (tar file).
+        --second-archive (Path): Path to the second OCI image archive (tar file).
+        --output-dir (Path): Directory where `report.json` and `summary.md` will be written.
+    
+    Returns:
+        args (argparse.Namespace): Parsed arguments with attributes `image_name` (str),
+        `first_archive` (Path), `second_archive` (Path), and `output_dir` (Path).
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--image-name", required=True)
     parser.add_argument("--first-archive", required=True, type=Path)
@@ -145,6 +205,17 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """
+    Execute the CLI workflow that compares two OCI image archives and writes reproducibility artifacts.
+    
+    Validates that both archive paths exist, extracts manifest information from each archive, writes a machine-readable report and a human-readable summary to the specified output directory, prints the generated artifact paths, and returns an exit code indicating comparison result.
+    
+    Returns:
+        0 if the two archives' manifest digests match, 1 if they differ.
+    
+    Raises:
+        SystemExit: If an archive is missing, cannot be opened as a tar archive, or required OCI manifest fields are invalid (these conditions cause immediate program termination via fail()).
+    """
     args = parse_args()
     first_path = args.first_archive.resolve()
     second_path = args.second_archive.resolve()

@@ -14,6 +14,19 @@ SCRIPTS_DIR = ROOT / "scripts"
 
 
 def load_module(name: str, path: pathlib.Path):
+    """
+    Load a Python module from a filesystem path and register it in sys.modules.
+    
+    Parameters:
+        name (str): The import name to assign to the loaded module in sys.modules.
+        path (pathlib.Path): Filesystem path to the source file to load.
+    
+    Returns:
+        module: The loaded module object.
+    
+    Raises:
+        AssertionError: If a module spec or loader cannot be created for the given path.
+    """
     spec = importlib.util.spec_from_file_location(name, path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
@@ -29,6 +42,14 @@ reproducibility_pilot = load_module(
 
 
 def write_oci_archive(path: pathlib.Path, manifest_digest: str, ref_name: str = "test") -> None:
+    """
+    Create a tar archive at `path` containing a minimal OCI image layout with a single `index.json` manifest.
+    
+    Parameters:
+        path (pathlib.Path): Filesystem path where the tar archive will be written.
+        manifest_digest (str): Digest string to place in the manifest's `digest` field.
+        ref_name (str): Value for the `org.opencontainers.image.ref.name` annotation in the manifest (default "test").
+    """
     index = {
         "schemaVersion": 2,
         "manifests": [
