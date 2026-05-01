@@ -176,6 +176,6 @@ It is complete only after the required runtime checks are observed and recorded 
 
 Use:
 
-- [`templates/risky-release-evidence.md`](templates/risky-release-evidence.md)
-- [`rollout-gates-policy.md`](rollout-gates-policy.md)
-- [`canary-promotion-checklist.md`](canary-promotion-checklist.md)
+- [`templates/risky-release-evidence.md`](/docs/governance/risky-release-evidence.md)
+- [`rollout-gates-policy.md`](/docs/governance/rollout-gates-policy.md)
+- [`canary-promotion-checklist.md`](/docs/release-patterns/canary-promotion-checklist.md)

@@ -10,7 +10,7 @@ from dataclasses import dataclass
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 README_PATH = ROOT / 'README.md'
-EVIDENCE_INDEX_PATH = ROOT / 'docs' / 'governance-evidence-index.md'
+EVIDENCE_INDEX_PATH = ROOT / 'docs' / 'governance' / 'governance-evidence-index.md'
 
 
 @dataclass(frozen=True)
@@ -175,7 +175,7 @@ def extract_evidence_rows(text: str) -> list[EvidenceRow]:
 
     if not rows:
         raise SystemExit(
-            "docs/governance-evidence-index.md is missing the 'README Claim Traceability' table rows."
+            "docs/governance/governance-evidence-index.md is missing the 'README Claim Traceability' table rows."
         )
 
     return rows
@@ -366,7 +366,7 @@ def run_check(readme_path: pathlib.Path = README_PATH, evidence_index_path: path
             for claim in missing_claims:
                 print(
                     f"- README claim '{claim}' does not have a matching row in "
-                    "docs/governance-evidence-index.md. Remediation: add a row for this claim or update the "
+                    "docs/governance/governance-evidence-index.md. Remediation: add a row for this claim or update the "
                     "README TL;DR claim text and evidence index row together.",
                     file=sys.stderr,
                 )
@@ -388,14 +388,14 @@ def parse_args() -> argparse.Namespace:
     
     Parameters:
         --readme (pathlib.Path): Path to the README file to validate (defaults to the repository README).
-        --evidence-index (pathlib.Path): Path to the governance evidence index markdown file (defaults to docs/governance-evidence-index.md).
+        --evidence-index (pathlib.Path): Path to the governance evidence index markdown file (defaults to docs/governance/governance-evidence-index.md).
     
     Returns:
         argparse.Namespace: Parsed arguments with attributes `readme` and `evidence_index`, both as pathlib.Path.
     """
     parser = argparse.ArgumentParser(
         description=(
-            'Validate README governance claims are covered by docs/governance-evidence-index.md '
+            'Validate README governance claims are covered by docs/governance/governance-evidence-index.md '
             'and that workflow/job references in the evidence index remain valid.'
         )
     )

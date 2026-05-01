@@ -6,7 +6,9 @@
 
 This document turns the repository's existing "L3-aligned controls in progress" statement into an execution plan with explicit sequencing, validation, and rollback expectations.
 
-It is intentionally scoped to the build-track gaps already acknowledged in [`docs/governance.md`](governance.md#slsa-level-review-and-requirement-mapping): hermeticity, reproducibility, build isolation, and dependency provenance.
+It is intentionally scoped to the build-track gaps already acknowledged in [`docs/governance.md`](/docs/governance.md#slsa-level-review-and-requirement-mapping): hermeticity, reproducibility, build isolation, and dependency provenance.
+
+For a workflow-by-workflow implementation checklist tied to the active repo configuration, see [`docs/build-l3-checklist-and-patch-plan.md`](/docs/supply-chain/build-l3-checklist-and-patch-plan.md).
 
 ## Objective and Scope
 
@@ -24,15 +26,6 @@ Out of scope for this plan:
 - claiming formal SLSA L3 certification
 - replacing the current Sigstore, Kyverno, or GitOps architecture
 - weakening fail-closed release or admission behavior while pilots run
-
-## Current-State Gap Matrix
-
-| Dimension | Current posture | Gap to L3-aligned posture | Risk if deferred | Existing evidence |
-| :--- | :--- | :--- | :--- | :--- |
-| Hermeticity | Release builds run on ephemeral GitHub-hosted runners with pinned workflow actions, but builds still depend on live network access for package resolution, installer downloads, registry pushes, and scanner database refreshes. | Reduce mutable network inputs during trusted build stages, define which external fetches remain allowed, and introduce a controlled path for pre-fetched or mirrored build dependencies. | Upstream package or installer drift can change build behavior between releases and make provenance harder to interpret during incidents. | `.github/workflows/ci-release-gate.yml`; `docs/governance.md`; `docs/threat-model.md` |
-| Reproducibility | Artifact identity is digest-based and provenance is emitted, but the repo does not yet perform a deterministic rebuild comparison or record a reproducibility threshold. | Add a reproducibility check that rebuilds at least one target from the same source and compares digest or normalized output, with explicit tolerance criteria. | Incident response must trust a single build path; silent build drift can remain undetected until after release. | `digest-*` release artifacts; `actions/attest-build-provenance`; `docs/governance.md` |
-| Build isolation | Trusted builds are tag-gated, use hosted runners, and sign only after release gates pass. However, runner hardening assumptions remain external to the repo and job-level isolation expectations are not codified as a roadmap. | Document and incrementally tighten builder trust assumptions, including action pinning, image pinning, permission minimization, and isolation expectations for future self-hosted or hardened runners. | A compromised or drifted builder environment could still produce apparently valid provenance from a weak execution context. | `.github/workflows/ci-release-gate.yml`; `.github/workflows/gitops-enforce.yml`; `docs/threat-model.md` |
-| Dependency provenance | Release workflows already pin most third-party GitHub Actions by full SHA and pin the ZAP image by digest, but the repo lacks a dedicated control that continuously validates high-trust workflow input pinning or records exceptions. | Add an explicit dependency-provenance guardrail for workflow actions and OCI images, then extend it toward mirrored installers and package-source attestations. | Mutable third-party workflow inputs can weaken trust in build provenance even when artifact attestations are present. | Workflow files; `docs/adr/002-image-signing-attestation.md`; pilot evidence in [`docs/slsa-l3-pilot-retrospective.md`](slsa-l3-pilot-retrospective.md) |
 
 ## Prioritization Model
 
@@ -60,7 +53,7 @@ establish an auditable baseline for dependency provenance without changing relea
 | Control | Owner | Dependencies | Validation method | Rollback path |
 | :--- | :--- | :--- | :--- | :--- |
 | Pilot high-trust workflow input provenance check | Project Maintainers | Python 3 + `PyYAML`; access to `.github/workflows/ci-release-gate.yml` and `.github/workflows/gitops-enforce.yml` | Run `python3 scripts/check-workflow-input-provenance.py`; confirm all third-party action refs are full-SHA pinned and OCI image refs are digest-pinned; regression coverage in `scripts/tests/test_workflow_input_provenance.py` | Remove the standalone script and documentation references if it creates noise or false positives; no workflow rollback is required because enforcement is not yet wired into CI. |
-| Record approved exceptions for mutable installer sources | Project Maintainers with Security Reviewer sign-off | Pilot output; review of installer URLs used by release workflows | Manual review captured in roadmap approval and quarterly governance review | Revert the exception inventory entries and keep the current documented posture if the exception model is too coarse. |
+| Record approved exceptions for mutable installer sources | Project Maintainers with Security Reviewer sign-off | Pilot output; review of installer URLs used by release workflows | Manual review captured in `docs/trusted-workflow-input-inventory.md` and quarterly governance review | Revert the exception inventory entries and keep the current documented posture if the exception model is too coarse. |
 
 ### Phase 1: 30 to 60 days
 
@@ -79,7 +72,7 @@ add the first reproducibility evidence and constrain mutable build inputs furthe
 
 | Control | Owner | Dependencies | Validation method | Rollback path |
 | :--- | :--- | :--- | :--- | :--- |
-| Add a rebuild-and-compare reproducibility job for one release image | Project Maintainers with Security Reviewer review | Phase 1 provenance guardrail; agreed reproducibility threshold; acceptable CI runtime budget | Compare rebuild digest or normalized build output from the same ref; record pass/fail evidence in workflow artifacts | Disable the extra reproducibility job and preserve artifact signing on the existing path if the comparison is too flaky or exceeds runtime budget. |
+| Add a rebuild-and-compare reproducibility job for one release image | Project Maintainers with Security Reviewer review | Phase 1 provenance guardrail; agreed reproducibility threshold; acceptable CI runtime budget | The release workflow now runs `reproducibility-pilot-backend` as a non-blocking pilot and uploads artifact `reproducibility-pilot-backend`; use `report.json` and `summary.md` to classify pass or mismatch before considering any blocking rollout | Disable the extra reproducibility job and preserve artifact signing on the existing path if the comparison is too flaky or exceeds runtime budget. |
 | Document allowed network egress and mutable inputs for trusted build steps | Project Maintainers | Current release workflow inventory; reproducibility pilot results | Governance doc review plus dry-run verification that the documented inputs match workflow behavior | Revert the documented constraint set if it proves materially incomplete; do not weaken existing release gates. |
 
 ### Phase 3: 90+ days

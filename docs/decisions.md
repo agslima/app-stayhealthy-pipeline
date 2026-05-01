@@ -100,7 +100,7 @@ _Compared with Argo CD or pull-based GitOps_
 
 A CI-driven, push-based GitOps model was selected for this repository.
 
-See [ADR 001](adr/001-gitops-strategy.md) for the full decision record.
+See [ADR 001](/docs/adr/001-gitops-strategy.md) for the full decision record.
 
 ### Summary rationale
 
@@ -172,7 +172,7 @@ _Compared with one-step, in-place schema replacement_
 
 This repository uses an expand-and-contract migration strategy for database schema evolution.
 
-See [ADR 008](adr/008-database-migration-strategy.md) for the full decision record and [database-migration-strategy.md](database-migration-strategy.md) for the normative operating rules.
+See [ADR 008](/docs/adr/008-database-migration-strategy.md) for the full decision record and [database-migration-strategy.md](/docs/database/database-migration-strategy.md) for the normative operating rules.
 
 ### Summary rationale
 
@@ -198,7 +198,7 @@ _Compared with service-mesh traffic management or controller-driven rollout_
 
 The repository uses a simple replica-weighted canary rollout for the production backend.
 
-See [ADR 009](adr/009-progressive-delivery-canary-strategy.md) for the full decision record and [canary-rollout-strategy.md](canary-rollout-strategy.md) for the normative operating model.
+See [ADR 009](/docs/adr/009-progressive-delivery-canary-strategy.md) for the full decision record and [canary-rollout-strategy.md](/docs/release-patterns/canary-rollout-strategy.md) for the normative operating model.
 
 ### Summary rationale
 
@@ -215,12 +215,12 @@ It does not claim service-mesh precision or automated controller-driven promotio
 
 The following ADRs capture the historical decision record for the main governance and delivery patterns in this repository:
 
-- [ADR 001: CI-Driven (Push-Based) GitOps Strategy](adr/001-gitops-strategy.md)
-- [ADR 002: Image Signing and Attestation Strategy (Cosign + Kyverno)](adr/002-image-signing-attestation.md)
-- [ADR 003: Policy Enforcement Strategy](adr/003-policy-enforcement-strategy.md)
-- [ADR 004: Vulnerability Thresholds and Risk Acceptance](adr/004-vulnerability-thresholds-risk-acceptance.md)
-- [ADR 005: Break-Glass and Exception Handling Strategy](adr/005-break-glass-exception-handling.md)
-- [ADR 006: Scanner Failure and Degraded Mode Strategy](adr/006-scanner-failure-degraded-mode.md)
-- [ADR 007: Supply Chain Incident Response and Revocation Strategy](adr/007-supply-chain-incident-response-revocation.md)
-- [ADR 008: Database Migration Strategy](adr/008-database-migration-strategy.md)
-- [ADR 009: Progressive Delivery Canary Strategy](adr/009-progressive-delivery-canary-strategy.md)
+- [ADR 001: CI-Driven (Push-Based) GitOps Strategy](/docs/adr/001-gitops-strategy.md)
+- [ADR 002: Image Signing and Attestation Strategy (Cosign + Kyverno)](/docs/adr/002-image-signing-attestation.md)
+- [ADR 003: Policy Enforcement Strategy](/docs/adr/003-policy-enforcement-strategy.md)
+- [ADR 004: Vulnerability Thresholds and Risk Acceptance](/docs/adr/004-vulnerability-thresholds-risk-acceptance.md)
+- [ADR 005: Break-Glass and Exception Handling Strategy](/docs/adr/005-break-glass-exception-handling.md)
+- [ADR 006: Scanner Failure and Degraded Mode Strategy](/docs/adr/006-scanner-failure-degraded-mode.md)
+- [ADR 007: Supply Chain Incident Response and Revocation Strategy](/docs/adr/007-supply-chain-incident-response-revocation.md)
+- [ADR 008: Database Migration Strategy](/docs/adr/008-database-migration-strategy.md)
+- [ADR 009: Progressive Delivery Canary Strategy](/docs/adr/009-progressive-delivery-canary-strategy.md)

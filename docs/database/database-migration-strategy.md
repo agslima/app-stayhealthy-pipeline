@@ -19,8 +19,8 @@ This is a governance requirement, not a suggestion.
 
 Related operational documents:
 
-- [`schema-change-deployment-procedure.md`](schema-change-deployment-procedure.md)
-- [`database-migration-demo-prescription-status.md`](database-migration-demo-prescription-status.md)
+- [`schema-change-deployment-procedure.md`](/docs/database/schema-change-deployment-procedure.md)
+- [`database-migration-demo-prescription-status.md`](/docs/database/database-migration-demo-prescription-status.md)
 
 ## Required Migration Model
 
