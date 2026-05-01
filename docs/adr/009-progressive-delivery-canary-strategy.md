@@ -46,7 +46,7 @@ Specifically:
 This repository does not claim to support every rollout model.
 It intentionally does not introduce service-mesh traffic management or a dedicated rollout controller at this stage.
 
-Normative operating guidance lives in [`docs/canary-rollout-strategy.md`](../canary-rollout-strategy.md).
+Normative operating guidance lives in [`docs/canary-rollout-strategy.md`](/docs/release-patterns/canary-rollout-strategy.md).
 
 ## Rationale
 

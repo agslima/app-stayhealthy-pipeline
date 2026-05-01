@@ -73,7 +73,7 @@ The security model follows a zero-trust posture for delivery:
 2. Build provenance ties artifact to workflow/run/commit.
 3. Verification catches provenance mismatch from untrusted build context.
 
-Current builder-isolation assumptions, residual risks, and non-claims are documented in [`builder-isolation-assumptions.md`](builder-isolation-assumptions.md).
+Current builder-isolation assumptions, residual risks, and non-claims are documented in [`builder-isolation-assumptions.md`](/docs/supply-chain/builder-isolation-assumptions.md).
 
 ## Residual Risks
 
@@ -84,7 +84,7 @@ Current builder-isolation assumptions, residual risks, and non-claims are docume
 - **Scanner availability/outages:** Security tools may fail operationally.
   - Mitigation: fail-closed release gate + documented degraded-mode and break-glass ADRs.
 
-Accepted residual risk treatment depends on the governance controls described in `docs/governance.md`, the evidence mapping in `docs/governance-evidence-index.md`, and the active release and admission enforcement path.
+Accepted residual risk treatment depends on the governance controls described in `docs/governance.md`, the evidence mapping in `docs/governance/governance-evidence-index.md`, and the active release and admission enforcement path.
 
 ## Security Architecture Diagram
 

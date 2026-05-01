@@ -8,7 +8,7 @@ This document records the repository's current builder-isolation assumptions for
 
 It is not a claim that the repository already satisfies SLSA Build L3 hardened-build requirements. It is the current control statement for what the repository does rely on, what it verifies directly, and what remains an accepted external dependency.
 
-Use [`docs/build-l3-checklist-and-patch-plan.md`](build-l3-checklist-and-patch-plan.md) for the repository-specific patch sequence that follows from these assumptions.
+Use [`docs/build-l3-checklist-and-patch-plan.md`](/docs/supply-chain/build-l3-checklist-and-patch-plan.md) for the repository-specific patch sequence that follows from these assumptions.
 
 ## Scope
 

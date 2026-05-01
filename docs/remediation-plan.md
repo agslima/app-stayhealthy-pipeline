@@ -23,7 +23,7 @@ Goal: remove the highest residual ambiguity between documented governance commit
 
 Tasks:
 
-- [ ] Add an automated check that validates all top-level README governance claims have corresponding rows in `docs/governance-evidence-index.md`.
+- [ ] Add an automated check that validates all top-level README governance claims have corresponding rows in `docs/governance/governance-evidence-index.md`.
 - [ ] Add a CI check for broken references to workflow files and jobs used in the evidence index.
 - [ ] Fail with actionable guidance explaining which claim or row is missing or stale.
 
@@ -200,14 +200,14 @@ Evidence required:
 
 Tasks:
 
-- [x] Build a gap matrix for hermeticity, reproducibility, build isolation, and dependency provenance in [`docs/slsa-l3-sequencing-plan.md`](slsa-l3-sequencing-plan.md).
-- [x] Prioritize controls by risk reduction versus operational cost in [`docs/slsa-l3-sequencing-plan.md`](slsa-l3-sequencing-plan.md).
-- [x] Run one pilot control with explicit success, failure, and rollback criteria in [`docs/slsa-l3-pilot-retrospective.md`](slsa-l3-pilot-retrospective.md).
+- [x] Build a gap matrix for hermeticity, reproducibility, build isolation, and dependency provenance in [`docs/slsa-l3-sequencing-plan.md`](/docs/supply-chain/slsa-l3-sequencing-plan.md).
+- [x] Prioritize controls by risk reduction versus operational cost in [`docs/slsa-l3-sequencing-plan.md`](/docs/supply-chain/slsa-l3-sequencing-plan.md).
+- [x] Run one pilot control with explicit success, failure, and rollback criteria, with evidence captured in [`docs/reproducibility-pilot-backend.md`](/docs/supply-chain/reproducibility-pilot-backend.md).
 
 Deliverables:
 
-- time-phased roadmap: [`docs/slsa-l3-sequencing-plan.md`](slsa-l3-sequencing-plan.md)
-- pilot report: [`docs/slsa-l3-pilot-retrospective.md`](slsa-l3-pilot-retrospective.md)
+- time-phased roadmap: [`docs/slsa-l3-sequencing-plan.md`](/docs/supply-chain/slsa-l3-sequencing-plan.md)
+- pilot report: [`docs/reproducibility-pilot-backend.md`](/docs/supply-chain/reproducibility-pilot-backend.md)
 
 Acceptance criteria:
 
@@ -216,7 +216,7 @@ Acceptance criteria:
 Evidence required:
 
 - approved roadmap: pending maintainer sign-off on the sequencing plan
-- pilot retrospective: [`docs/slsa-l3-pilot-retrospective.md`](slsa-l3-pilot-retrospective.md)
+- pilot retrospective: [`docs/reproducibility-pilot-backend.md`](/docs/supply-chain/reproducibility-pilot-backend.md)
 
 #### Epic M2-E3: Governance SLO operationalization
 

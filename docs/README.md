@@ -24,25 +24,24 @@ If you are new to the repository, start with these documents:
 ### Governance and Security
 
 - [governance.md](governance.md): repository governance model and control boundaries
-- [runtime-signals.md](runtime-signals.md): minimum runtime checks and thresholds for risky release decisions
-- [database-migration-strategy.md](database-migration-strategy.md): required operating model for safe schema evolution and PR review
-- [canary-rollout-strategy.md](canary-rollout-strategy.md): chosen progressive rollout model and production scope boundary
-- [rollout-gates-policy.md](rollout-gates-policy.md): required promotion gates, evidence, and rollback triggers for canary rollout
-- [canary-promotion-checklist.md](canary-promotion-checklist.md): operator checklist for canary evaluation and promotion
-- [canary-rollout-walkthrough.md](canary-rollout-walkthrough.md): worked examples of successful and halted canary rollout
-- [templates/risky-release-evidence.md](templates/risky-release-evidence.md): standard evidence record for schema change, worker-introduction, and phased-rollout releases
-- [schema-change-deployment-procedure.md](schema-change-deployment-procedure.md): controlled pre-deploy, app deploy, and post-deploy sequencing for schema changes
-- [database-migration-demo-prescription-status.md](database-migration-demo-prescription-status.md): worked example of a safe schema evolution release sequence
-- [async-workflow-design.md](async-workflow-design.md): background worker design for asynchronous prescription export generation
-- [async-failure-scenario-worker-retry.md](async-failure-scenario-worker-retry.md): concrete partial-failure walkthrough for async retry and recovery
-- [failure-scenarios/canary-health-degrades.md](failure-scenarios/canary-health-degrades.md): stressed rollout example showing stop and rollback governance
-- [governance-evidence-index.md](governance-evidence-index.md): claim-to-control and evidence traceability index
-- [governance-slos.md](governance-slos.md): governance operating targets and reporting path
-- [builder-isolation-assumptions.md](builder-isolation-assumptions.md): current builder trust boundary, enforced isolation-adjacent controls, and non-claims
-- [build-l3-checklist-and-patch-plan.md](build-l3-checklist-and-patch-plan.md): repo-specific checklist and phased patch plan for a future Build L3 claim
-- [slsa-l3-sequencing-plan.md](slsa-l3-sequencing-plan.md): phased roadmap for L3-aligned build-control sequencing, ownership, validation, and rollback
-- [slsa-l3-pilot-retrospective.md](slsa-l3-pilot-retrospective.md): pilot results and retrospective for the first L3-aligned dependency-provenance control
-- [reproducibility-pilot-backend.md](reproducibility-pilot-backend.md): non-blocking backend reproducibility pilot design and evidence path
+- [runtime-signals.md](/docs/governance/runtime-signals.md): minimum runtime checks and thresholds for risky release decisions
+- [database-migration-strategy.md](/docs/database/database-migration-strategy.md): required operating model for safe schema evolution and PR review
+- [canary-rollout-strategy.md](/docs/release-patterns/canary-rollout-strategy.md): chosen progressive rollout model and production scope boundary
+- [rollout-gates-policy.md](/docs/governance/rollout-gates-policy.md): required promotion gates, evidence, and rollback triggers for canary rollout
+- [canary-promotion-checklist.md](/docs/release-patterns/canary-promotion-checklist.md): operator checklist for canary evaluation and promotion
+- [canary-rollout-walkthrough.md](/docs/release-patterns/canary-rollout-walkthrough.md): worked examples of successful and halted canary rollout
+- [templates/risky-release-evidence.md](/docs/governance/risky-release-evidence.md): standard evidence record for schema change, worker-introduction, and phased-rollout releases
+- [schema-change-deployment-procedure.md](/docs/database/schema-change-deployment-procedure.md): controlled pre-deploy, app deploy, and post-deploy sequencing for schema changes
+- [database-migration-demo-prescription-status.md](/docs/database/database-migration-demo-prescription-status.md): worked example of a safe schema evolution release sequence
+- [async-workflow-design.md](/docs/async/async-workflow-design.md): background worker design for asynchronous prescription export generation
+- [async-failure-scenario-worker-retry.md](/docs/async/async-failure-scenario-worker-retry.md): concrete partial-failure walkthrough for async retry and recovery
+- [failure-scenarios/canary-health-degrades.md](/docs/release-patterns/failure-scenarios/canary-health-degrades.md): stressed rollout example showing stop and rollback governance
+- [governance-evidence-index.md](/docs/governance/governance-evidence-index.md): claim-to-control and evidence traceability index
+- [governance-slos.md](/docs/governance/governance-slos.md): governance operating targets and reporting path
+- [builder-isolation-assumptions.md](/docs/supply-chain/builder-isolation-assumptions.md): current builder trust boundary, enforced isolation-adjacent controls, and non-claims
+- [build-l3-checklist-and-patch-plan.md](/docs/supply-chain/build-l3-checklist-and-patch-plan.md): repo-specific checklist and phased patch plan for a future Build L3 claim
+- [slsa-l3-sequencing-plan.md](/docs/supply-chain/slsa-l3-sequencing-plan.md): phased roadmap for L3-aligned build-control sequencing, ownership, validation, and rollback
+- [reproducibility-pilot-backend.md](/docs/supply-chain/reproducibility-pilot-backend.md): non-blocking backend reproducibility pilot design and evidence path
 - [threat-model.md](threat-model.md): threat analysis and security architecture
 - [security-debt.md](security-debt.md): tracked accepted risk and remediation status
 
@@ -50,29 +49,28 @@ If you are new to the repository, start with these documents:
 
 - [architecture.md](architecture.md): repository structure and control boundaries
 - [decisions.md](decisions.md): summary of major tooling and architecture choices
-- [adr/001-gitops-strategy.md](adr/001-gitops-strategy.md): CI-driven GitOps strategy
-- [adr/002-image-signing-attestation.md](adr/002-image-signing-attestation.md): signing and attestation model
-- [adr/003-policy-enforcement-strategy.md](adr/003-policy-enforcement-strategy.md): CI validation versus cluster admission
-- [adr/004-vulnerability-thresholds-risk-acceptance.md](adr/004-vulnerability-thresholds-risk-acceptance.md): vulnerability thresholds and risk acceptance
-- [adr/005-break-glass-exception-handling.md](adr/005-break-glass-exception-handling.md): break-glass and exception handling
-- [adr/006-scanner-failure-degraded-mode.md](adr/006-scanner-failure-degraded-mode.md): degraded mode for scanner failures
-- [adr/007-supply-chain-incident-response-revocation.md](adr/007-supply-chain-incident-response-revocation.md): incident response and trust revocation
-- [adr/008-database-migration-strategy.md](adr/008-database-migration-strategy.md): expand-and-contract database migration governance
-- [adr/009-progressive-delivery-canary-strategy.md](adr/009-progressive-delivery-canary-strategy.md): progressive delivery strategy for risky backend releases
+- [adr/001-gitops-strategy.md](/docs/adr/001-gitops-strategy.md): CI-driven GitOps strategy
+- [adr/002-image-signing-attestation.md](/docs/adr/002-image-signing-attestation.md): signing and attestation model
+- [adr/003-policy-enforcement-strategy.md](/docs/adr/003-policy-enforcement-strategy.md): CI validation versus cluster admission
+- [adr/004-vulnerability-thresholds-risk-acceptance.md](/docs/adr/004-vulnerability-thresholds-risk-acceptance.md): vulnerability thresholds and risk acceptance
+- [adr/005-break-glass-exception-handling.md](/docs/adr/005-break-glass-exception-handling.md): break-glass and exception handling
+- [adr/006-scanner-failure-degraded-mode.md](/docs/adr/006-scanner-failure-degraded-mode.md): degraded mode for scanner failures
+- [adr/007-supply-chain-incident-response-revocation.md](/docs/adr/007-supply-chain-incident-response-revocation.md): incident response and trust revocation
+- [adr/008-database-migration-strategy.md](/docs/adr/008-database-migration-strategy.md): expand-and-contract database migration governance
+- [adr/009-progressive-delivery-canary-strategy.md](/docs/adr/009-progressive-delivery-canary-strategy.md): progressive delivery strategy for risky backend releases
 
 ### Operations and Planning
 
 - [runbook.md](runbook.md): incident and failure response guidance
 - [remediation-plan.md](remediation-plan.md): planned remediation work and sequencing
-- [builder-isolation-assumptions.md](builder-isolation-assumptions.md): current-state builder trust model and hardening assumptions
-- [build-l3-checklist-and-patch-plan.md](build-l3-checklist-and-patch-plan.md): concrete checklist and patch plan mapped to the active trusted workflows
-- [slsa-l3-sequencing-plan.md](slsa-l3-sequencing-plan.md): detailed execution plan for the M2 SLSA L3-aligned workstream
-- [slsa-l3-pilot-retrospective.md](slsa-l3-pilot-retrospective.md): pilot evidence for the first sequencing-plan control
-- [reproducibility-pilot-backend.md](reproducibility-pilot-backend.md): pilot scope, success criteria, and artifact location for backend reproducibility evidence
+- [builder-isolation-assumptions.md](/docs/supply-chain/builder-isolation-assumptions.md): current-state builder trust model and hardening assumptions
+- [build-l3-checklist-and-patch-plan.md](/docs/supply-chain/build-l3-checklist-and-patch-plan.md): concrete checklist and patch plan mapped to the active trusted workflows
+- [slsa-l3-sequencing-plan.md](/docs/supply-chain/slsa-l3-sequencing-plan.md): detailed execution plan for the M2 SLSA L3-aligned workstream
+- [reproducibility-pilot-backend.md](/docs/supply-chain/reproducibility-pilot-backend.md): pilot scope, success criteria, and artifact location for backend reproducibility evidence
 
 ### Evidence and Supporting Material
 
-- [snyk/index.md](snyk/index.md): published Snyk evidence index
+- [snyk/index.md](/docs/snyk/index.md): published Snyk evidence index
 - [`images/`](images/): supporting screenshots and exported visual evidence
 
 ## Maintenance Expectations
