@@ -4,9 +4,11 @@
 [//]: # (review_cadence: Quarterly)
 [//]: # (last_reviewed: 2026-04-30)
 
-This document turns the current Build L3 discussion into a repository-specific checklist and patch plan against the active trusted workflows.
+## Goal
 
-It is intentionally split into:
+Create a credible path from the current `SLSA Build L2` posture to a future point where a `Build L3` claim could be supported by both repository evidence and build-platform evidence.
+
+It is split into:
 
 - controls the repository can patch directly
 - controls that require release evidence from actual workflow runs
@@ -20,11 +22,6 @@ The trusted workflow set for this plan is:
 - `.github/workflows/release-dast.yml`
 - `.github/workflows/gitops-enforce.yml`
 
-## Goal
-
-Create a credible path from the current `SLSA Build L2` posture to a future point where a `Build L3` claim could be supported by both repository evidence and build-platform evidence.
-
-This plan does not itself assert that the repository already meets Build L3.
 
 ## Build L3 Checklist
 
@@ -66,10 +63,10 @@ ensure the existing repo-side controls stay enforced and auditable.
 
 Checklist:
 
-- [ ] Keep `scripts/check-workflow-input-provenance.py` passing on trusted workflows.
-- [ ] Keep `step-security/harden-runner` present in release, scan, reproducibility-pilot, and GitOps promotion jobs.
-- [ ] Keep GitOps promotion fail-closed on provenance and attestation verification.
-- [ ] Keep digest-only promotion and deployment behavior intact.
+- [x] Keep `scripts/check-workflow-input-provenance.py` passing on trusted workflows.
+- [x] Keep `step-security/harden-runner` present in release, scan, reproducibility-pilot, and GitOps promotion jobs.
+- [x] Keep GitOps promotion fail-closed on provenance and attestation verification.
+- [x] Keep digest-only promotion and deployment behavior intact.
 
 Expected repo touchpoints:
 
@@ -154,67 +151,30 @@ Expected evidence rather than code:
 
 ### `ci-release-gate.yml`
 
-Already strong:
-
-- tag-gated release orchestration
-- separate build, scan, provenance, and promotion stages
-- reproducibility pilot for backend
-
-Next likely patches:
+Patches:
 
 - stronger immutability for the SLSA generator reusable workflow ref
 - future rollout of reproducibility evidence beyond pilot status
 
 ### `release-build-push-dual-registry.yml`
 
-Already strong:
-
-- `persist-credentials: false`
-- `no-cache: true`
-- digest export and downstream attestation
-
-Next likely patches:
+Patches:
 
 - reduce live `npm ci` dependency influence
 - evaluate whether build metadata normalization used in the reproducibility pilot should influence the main build path
 
 ### `release-trivy.yml`
 
-Already strong:
-
-- pinned installer action
-- fail-closed gate
-- digest-based image scans
-
-Next likely patches:
+Patches:
 
 - decide whether DB mirroring is necessary
 
 ### `release-dast.yml`
 
-Already strong:
-
-- digest-pinned ZAP image
-- ephemeral compose environment
-- cleanup path for secrets
-
-Next likely patches:
+Patches:
 
 - tighten file permissions further if needed
 - keep ephemeral environment assumptions documented as part of builder-isolation review
-
-### `gitops-enforce.yml`
-
-Already strong:
-
-- fail-closed verification of signatures, attestations, builder identity, and source tag
-- SHA-pinned verifier action
-- checksum-verified `yq`
-- runner egress audit
-
-Next likely patches:
-
-- none urgent in-repo beyond maintaining the current guardrails and evidence
 
 ## Claim Gate
 
@@ -225,7 +185,3 @@ Use this gate before changing the repo’s posture statement to Build L3:
 - [ ] Mutable-input exceptions are reduced or explicitly accepted with rationale.
 - [ ] A platform-level decision or evidence package exists for run isolation.
 - [ ] A platform-level decision or evidence package exists for provenance-signing material isolation.
-
-If any of the last two boxes are unchecked, the repository should continue to describe itself as:
-
-`SLSA Build L2, with L3-aligned controls and evidence work in progress.`
