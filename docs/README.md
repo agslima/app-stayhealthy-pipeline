@@ -43,7 +43,6 @@ If you are new to the repository, start with these documents:
 - [slsa-l3-sequencing-plan.md](slsa-l3-sequencing-plan.md): phased roadmap for L3-aligned build-control sequencing, ownership, validation, and rollback
 - [slsa-l3-pilot-retrospective.md](slsa-l3-pilot-retrospective.md): pilot results and retrospective for the first L3-aligned dependency-provenance control
 - [reproducibility-pilot-backend.md](reproducibility-pilot-backend.md): non-blocking backend reproducibility pilot design and evidence path
-- [trusted-workflow-input-inventory.md](trusted-workflow-input-inventory.md): mutable external input inventory and exception log for release and promotion workflows
 - [threat-model.md](threat-model.md): threat analysis and security architecture
 - [security-debt.md](security-debt.md): tracked accepted risk and remediation status
 
@@ -70,7 +69,6 @@ If you are new to the repository, start with these documents:
 - [slsa-l3-sequencing-plan.md](slsa-l3-sequencing-plan.md): detailed execution plan for the M2 SLSA L3-aligned workstream
 - [slsa-l3-pilot-retrospective.md](slsa-l3-pilot-retrospective.md): pilot evidence for the first sequencing-plan control
 - [reproducibility-pilot-backend.md](reproducibility-pilot-backend.md): pilot scope, success criteria, and artifact location for backend reproducibility evidence
-- [trusted-workflow-input-inventory.md](trusted-workflow-input-inventory.md): current exception inventory for mutable trusted-workflow inputs
 
 ### Evidence and Supporting Material
 
