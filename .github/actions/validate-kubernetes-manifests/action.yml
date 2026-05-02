@@ -1,0 +1,80 @@
+name: 'Validate Kubernetes Manifests with Kyverno'
+description: 'Renders Kustomize manifests, evaluates them against Kyverno policies, and uploads the audit log.'
+
+inputs:
+  overlay-path:
+    description: 'Path to the kustomize overlay to build (e.g., k8s/overlays/prod)'
+    required: true
+  policies:
+    description: 'A newline-separated list of Kyverno policy files to apply'
+    required: true
+  log-artifact-name:
+    description: 'Name of the uploaded artifact containing the validation log'
+    default: 'kyverno-validation-log'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Render and Validate Manifests
+      shell: bash
+      env:
+        OVERLAY_PATH: ${{ inputs.overlay-path }}
+        POLICIES_INPUT: ${{ inputs.policies }}
+        LOG_FILE: kyverno-validation.log
+      run: |
+        set -euo pipefail
+        
+        # Initialize the log file securely
+        : > "$LOG_FILE"
+        
+        # 1. Secure temp file handling with guaranteed cleanup
+        RENDERED_MANIFEST=$(mktemp)
+        trap 'rm -f "$RENDERED_MANIFEST"' EXIT
+        
+        echo "🔨 Rendering manifest for ${OVERLAY_PATH}..." | tee -a "$LOG_FILE"
+        kustomize build "$OVERLAY_PATH" > "$RENDERED_MANIFEST"
+        
+        test -s "$RENDERED_MANIFEST" || (echo "::error::Rendered manifest for ${OVERLAY_PATH} is empty"; exit 1)
+        
+        # 2. Extract and Log Sanity Checks
+        echo "=== Namespaces in rendered YAML ===" | tee -a "$LOG_FILE"
+        yq -r 'select(.metadata != null) | .kind + " " + (.metadata.namespace // "NONE") + " " + .metadata.name' "$RENDERED_MANIFEST" \
+          | sort | uniq -c | tee -a "$LOG_FILE"
+          
+        echo "=== Images in rendered YAML ===" | tee -a "$LOG_FILE"
+        yq -r '
+           select(.kind=="Deployment") |
+           .metadata.name as $n |
+           .spec.template.spec.containers[].image |
+           $n + " => " + .
+        ' "$RENDERED_MANIFEST" | tee -a "$LOG_FILE"
+        
+        # 3. Policy Evaluation Loop
+        echo "=== Kyverno policy evaluation ===" | tee -a "$LOG_FILE"
+        
+        # Read the multiline input robustly
+        while IFS= read -r POLICY; do
+          # Skip empty lines
+          [[ -z "$POLICY" ]] && continue
+          
+          echo "" | tee -a "$LOG_FILE"
+          echo "------------------------------------------------------------" | tee -a "$LOG_FILE"
+          echo "Applying policy: $POLICY" | tee -a "$LOG_FILE"
+          echo "------------------------------------------------------------" | tee -a "$LOG_FILE"
+          
+          kyverno apply "$POLICY" \
+            --resource "$RENDERED_MANIFEST" \
+            --registry \
+            --detailed-results \
+            | tee -a "$LOG_FILE"
+        done <<< "$POLICIES_INPUT"
+        
+        echo "✅ Policy Validation Passed." | tee -a "$LOG_FILE"
+
+    - name: Upload Validation Log
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.log-artifact-name }}
+        path: kyverno-validation.log
+        retention-days: 30
