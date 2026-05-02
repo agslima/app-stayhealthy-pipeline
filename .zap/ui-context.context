@@ -62,10 +62,10 @@
             <pollheaders/>
             <pollfreq>60</pollfreq>
             <pollunits>REQUESTS</pollunits>
-            <loggedin>\QWelcome back\E</loggedin>
-            <loggedout>\Q Sign Out\E</loggedout>
+            <loggedin>\QSign Out\E</loggedin>
+            <loggedout>\QWelcome back\E</loggedout>
             <browser>
-                <loginpageurl>http:localhost:8080/api/v2/auth/login</loginpageurl>
+                <loginpageurl>http://frontend:8080/</loginpageurl>
                 <browserid>firefox-headless</browserid>
                 <loginpagewait>5</loginpagewait>
                 <stepdelay>0</stepdelay>

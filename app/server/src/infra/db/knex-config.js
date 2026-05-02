@@ -12,8 +12,10 @@ const readSecretFile = (secretPath) => {
       // eslint-disable-next-line security/detect-non-literal-fs-filename
       return fs.readFileSync(secretPath, 'utf8').trim();
     }
-  } catch {
-    console.error(`Failed to read secret at ${secretPath}:`, error.message);
+  } catch (error) {
+    process.stderr.write(
+      `Failed to read configured secret file (${error.code || 'read_error'})\n`
+    );
   }
 
   return undefined;
