@@ -147,7 +147,7 @@ jobs:
 
       - name: Unit tests
         working-directory: app/client
-        run: npm test -- --ci
+        run: npm test
 
   # ==================================================================
   # JOB 2A: DOCKERFILE HYGIENE

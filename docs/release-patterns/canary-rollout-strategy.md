@@ -73,7 +73,7 @@ That limitation is accepted and documented.
 
 1. The governed Release workflow builds, scans, signs, and attests the new backend digest.
 2. The GitOps enforcement workflow updates the `backend-canary` digest in `k8s/overlays/prod/kustomization.yaml`.
-3. Operators validate the 25% canary using the track-specific Service, shared Service behavior, and the promotion gates in [`rollout-gates-policy.md`](rollout-gates-policy.md).
+3. Operators validate the 25% canary using the track-specific Service, shared Service behavior, and the promotion gates in [`rollout-gates-policy.md`](/docs/governance/rollout-gates-policy.md).
 4. If evidence remains healthy, operators promote by copying the canary digest into the stable backend slot and scaling down canary.
 5. If evidence degrades, operators halt promotion and roll back by restoring the prior canary digest or setting canary replicas to zero.
 
@@ -87,6 +87,6 @@ Promotion is intentionally not implicit.
 
 Use these companion documents during rollout:
 
-- [`rollout-gates-policy.md`](rollout-gates-policy.md)
-- [`canary-promotion-checklist.md`](canary-promotion-checklist.md)
-- [`canary-rollout-walkthrough.md`](canary-rollout-walkthrough.md)
+- [`rollout-gates-policy.md`](/docs/governance/rollout-gates-policy.md)
+- [`canary-promotion-checklist.md`](/docs/release-patterns/canary-promotion-checklist.md)
+- [`canary-rollout-walkthrough.md`](/docs/release-patterns/canary-rollout-walkthrough.md)

@@ -43,7 +43,7 @@ Required operating rules:
 - destructive cleanup happens only in a later release after old dependencies are removed
 - pull requests must make the migration phase and rollback expectations explicit
 
-The strategy is documented normatively in `docs/database-migration-strategy.md`.
+The strategy is documented normatively in `docs/database/database-migration-strategy.md`.
 
 ## Rationale
 

@@ -201,7 +201,7 @@ Expected logs:
 
 ## Concrete Partial Failure Example
 
-The canonical worked example is [`async-failure-scenario-worker-retry.md`](async-failure-scenario-worker-retry.md).
+The canonical worked example is [`async-failure-scenario-worker-retry.md`](/docs/async/async-failure-scenario-worker-retry.md).
 
 That scenario demonstrates:
 

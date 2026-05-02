@@ -38,7 +38,7 @@ Required evidence types:
 - `kubectl get deploy,po,svc -n production -l app=backend`
 - direct `curl` or synthetic health checks against `backend-canary`
 - shared-service health checks against `backend`
-- runtime signal review from [`runtime-signals.md`](runtime-signals.md), especially backend error-rate and readiness observations
+- runtime signal review from [`runtime-signals.md`](/docs/governance/runtime-signals.md), especially backend error-rate and readiness observations
 - operator note recording the start time, observation window, and decision
 
 The evidence may be attached to a PR, change ticket, or release record, but it must identify:
@@ -77,7 +77,7 @@ Promotion from canary to stable is allowed only when:
 - release provenance, signature, and attestation gates already passed
 - canary-specific health checks pass for the planned observation window
 - no open rollback trigger is active
-- the promotion checklist in [`canary-promotion-checklist.md`](canary-promotion-checklist.md) is complete
+- the promotion checklist in [`canary-promotion-checklist.md`](/docs/release-patterns/canary-promotion-checklist.md) is complete
 
 ## Rollback Triggers
 
