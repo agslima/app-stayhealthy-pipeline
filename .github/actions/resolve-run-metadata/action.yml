@@ -5,8 +5,8 @@ inputs:
   run-id:
     description: 'The GitHub Actions run ID to resolve'
     required: true
-  github-token:
-    description: 'GitHub token with read access to actions/runs'
+  github-token-file:
+    description: 'File path containing the GitHub token'
     required: true
   expected-workflow-name:
     description: 'The expected name of the workflow'
@@ -33,19 +33,22 @@ runs:
       id: resolve
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.github-token }}
+        TOKEN_FILE_PATH: ${{ inputs.github-token-file }}
         RUN_ID: ${{ inputs.run-id }}
         EXPECTED_WF_NAME: ${{ inputs.expected-workflow-name }}
       run: |
         set -euo pipefail
         
         test -n "$RUN_ID" || (echo "::error::Missing release run id."; exit 1)
-
+        if [[ ! -f "$TOKEN_FILE_PATH" ]]; then
+          echo "::error::Token file not found at provided path."
+          exit 1
+        fi
         API_URL="${{ github.api_url }}/repos/${{ github.repository }}/actions/runs/${RUN_ID}"
         
         # Fetch data with explicit API versioning
         RUN_JSON="$(curl -fsSL \
-          -H "Authorization: Bearer ${GH_TOKEN}" \
+          -H "Authorization: Bearer $(cat "$TOKEN_FILE_PATH")" \
           -H "Accept: application/vnd.github+json" \
           -H "X-GitHub-Api-Version: 2022-11-28" \
           "$API_URL")"
