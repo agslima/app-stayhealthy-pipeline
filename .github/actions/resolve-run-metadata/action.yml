@@ -40,12 +40,16 @@ runs:
         set -euo pipefail
         
         test -n "$RUN_ID" || (echo "::error::Missing release run id."; exit 1)
+
         if [[ ! -f "$TOKEN_FILE_PATH" ]]; then
           echo "::error::Token file not found at provided path."
           exit 1
         fi
+
         API_URL="${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}"
+        
         # Fetch data with explicit API versioning
+        # The token is securely read directly into the curl command
         RUN_JSON="$(curl -fsSL \
           --max-time 30 \
           -H "Authorization: Bearer $(cat "$TOKEN_FILE_PATH")" \
@@ -79,19 +83,39 @@ runs:
           exit 1
         fi
 
-        # 4. Validate Ref Formatting strictly
+        # 4. Resolve and Validate Ref strictly
         RELEASE_EFFECTIVE_REF="${RELEASE_REF:-$RELEASE_HEAD_REF}"
-        
         if [[ -z "$RELEASE_EFFECTIVE_REF" ]]; then
           echo "::error::Could not resolve release ref for run ${RUN_ID}."
           exit 1
         fi
 
-        # 🚨 HARD GATE: Ref must explicitly be a full tag ref.
-        # Explicitly reject bare tags (e.g., "v1.2.3") or branch names masquerading as tags.
-        # No local string manipulation or normalization is permitted.
+        # 🚨 TAG RESOLUTION VIA GITHUB API
+        # If the API returned a bare string (e.g., "v0.3.5"), query the git database
+        # to cryptographically prove it is an actual tag before proceeding.
+        if [[ ! "$RELEASE_EFFECTIVE_REF" =~ ^refs/tags/ ]]; then
+          echo "🔎 Resolving bare ref '${RELEASE_EFFECTIVE_REF}' via GitHub API to confirm it is a true tag..."
+          
+          # Use curl -s to suppress the error output from curl if it 404s, 
+          # extracting only the HTTP status code.
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer $(cat "$TOKEN_FILE_PATH")" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/git/ref/tags/${RELEASE_EFFECTIVE_REF}")
+            
+          if [[ "$HTTP_STATUS" == "200" ]]; then
+             echo "✅ API Confirmed: Tag exists. Safely constructing full ref."
+             RELEASE_EFFECTIVE_REF="refs/tags/${RELEASE_EFFECTIVE_REF}"
+          else
+             echo "::error::Security Failure: Ref '${RELEASE_EFFECTIVE_REF}' does not exist as a tag in the git database (HTTP ${HTTP_STATUS})."
+             exit 1
+          fi
+        fi
+
+        # 🚨 HARD GATE: Ref must explicitly be a full, semantic tag ref.
         if [[ ! "$RELEASE_EFFECTIVE_REF" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-          echo "::error::Release run ${RUN_ID} must originate from a tag push (ref: ${RELEASE_EFFECTIVE_REF})."
+          echo "::error::Release run ${RUN_ID} must originate from a semantic tag push (ref: ${RELEASE_EFFECTIVE_REF})."
           exit 1
         fi
 
