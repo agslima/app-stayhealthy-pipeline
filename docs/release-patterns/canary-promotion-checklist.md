@@ -18,7 +18,7 @@ Use this checklist when reviewing a backend canary rollout.
 - [ ] Record the current replica split and expected canary exposure.
 - [ ] Check `backend-canary` readiness and liveness state.
 - [ ] Check shared-service health through `backend`.
-- [ ] Review runtime signals from [`runtime-signals.md`](runtime-signals.md), especially 5xx/error-rate and readiness observations.
+- [ ] Review runtime signals from [`runtime-signals.md`](/docs/governance/runtime-signals.md), especially 5xx/error-rate and readiness observations.
 - [ ] Review restart counts and recent logs for canary pods.
 - [ ] Record the observation window start and end time.
 - [ ] Record who is supervising the rollout and who is authorized to promote it.
@@ -33,7 +33,7 @@ Use this checklist when reviewing a backend canary rollout.
 
 ## Stop and Roll Back
 
-- [ ] Halt promotion immediately if rollback triggers in [`rollout-gates-policy.md`](rollout-gates-policy.md) are met.
+- [ ] Halt promotion immediately if rollback triggers in [`rollout-gates-policy.md`](/docs/governance/rollout-gates-policy.md) are met.
 - [ ] Scale down canary or revert the canary digest to the last known-good value.
 - [ ] Record the trigger, impact, and rollback action in the release record or PR.
 - [ ] Record who exercised stop or rollback authority.

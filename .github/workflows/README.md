@@ -7,7 +7,7 @@
 
 ## Release and Promotion
 
-- `ci-release-gate.yml` (`Release`): Tag-based release orchestration and gating.
+- `ci-release-gate.yml` (`Release`): Tag-based release orchestration and gating, including a non-blocking backend reproducibility pilot artifact.
 - `release-build-push-dual-registry.yml` (`Release - Build and Push Dual Registry`): Builds and publishes release images.
 - `release-trivy.yml` (`Release - Trivy Scan & Attest`): Release image vulnerability scan and attestation.
 - `release-dast.yml` (`Release - DAST Analysis (Digest-based)`): Release DAST gate.

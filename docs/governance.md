@@ -57,7 +57,7 @@ The repository requires a repeatable evidence format when a release changes the 
 
 Required template:
 
-- [`docs/templates/risky-release-evidence.md`](templates/risky-release-evidence.md)
+- [`docs/templates/risky-release-evidence.md`](/docs/governance/risky-release-evidence.md)
 
 The template is expected for:
 
@@ -73,7 +73,7 @@ Minimum content:
 - rollback plan
 - approval points
 - evidence links
-- runtime observations required by [`docs/runtime-signals.md`](runtime-signals.md)
+- runtime observations required by [`docs/runtime-signals.md`](/docs/governance/runtime-signals.md)
 
 ## Trust Boundaries and Assumptions
 
@@ -244,10 +244,10 @@ Required strategy:
 
 Normative policy:
 
-- [`docs/database-migration-strategy.md`](database-migration-strategy.md)
-- [`docs/adr/008-database-migration-strategy.md`](adr/008-database-migration-strategy.md)
-- [`docs/schema-change-deployment-procedure.md`](schema-change-deployment-procedure.md)
-- [`docs/database-migration-demo-prescription-status.md`](database-migration-demo-prescription-status.md)
+- [`docs/database-migration-strategy.md`](/docs/database/database-migration-strategy.md)
+- [`docs/adr/008-database-migration-strategy.md`](/docs/adr/008-database-migration-strategy.md)
+- [`docs/schema-change-deployment-procedure.md`](/docs/database/schema-change-deployment-procedure.md)
+- [`docs/database-migration-demo-prescription-status.md`](/docs/database/database-migration-demo-prescription-status.md)
 
 Reviewer expectations for schema-changing PRs:
 
@@ -277,11 +277,11 @@ Required strategy:
 
 Normative policy:
 
-- [`docs/canary-rollout-strategy.md`](canary-rollout-strategy.md)
-- [`docs/rollout-gates-policy.md`](rollout-gates-policy.md)
-- [`docs/canary-promotion-checklist.md`](canary-promotion-checklist.md)
-- [`docs/canary-rollout-walkthrough.md`](canary-rollout-walkthrough.md)
-- [`docs/adr/009-progressive-delivery-canary-strategy.md`](adr/009-progressive-delivery-canary-strategy.md)
+- [`docs/canary-rollout-strategy.md`](/docs/release-patterns/canary-rollout-strategy.md)
+- [`docs/rollout-gates-policy.md`](/docs/governance/rollout-gates-policy.md)
+- [`docs/canary-promotion-checklist.md`](/docs/release-patterns/canary-promotion-checklist.md)
+- [`docs/canary-rollout-walkthrough.md`](/docs/release-patterns/canary-rollout-walkthrough.md)
+- [`docs/adr/009-progressive-delivery-canary-strategy.md`](/docs/adr/009-progressive-delivery-canary-strategy.md)
 
 Reviewer and operator expectations:
 
@@ -299,14 +299,14 @@ Promotion and stop authority:
 Runtime evidence requirement:
 
 - a risky release is not considered complete at CI success alone
-- required runtime signals and thresholds are defined in [`docs/runtime-signals.md`](runtime-signals.md)
+- required runtime signals and thresholds are defined in [`docs/runtime-signals.md`](/docs/governance/runtime-signals.md)
 - promotion decisions must record the observed runtime state in the risky release evidence record
 
 ## Workflow and Evidence Mapping
 
 ## README Claims → Controls Matrix
 
-The authoritative claim-to-enforcement index lives in [`governance-evidence-index.md`](governance-evidence-index.md). Use that document as the single audit surface for README claims, workflow jobs, policy enforcement points, artifact paths, ownership, and review cadence.
+The authoritative claim-to-enforcement index lives in [`governance-evidence-index.md`](/docs/governance/governance-evidence-index.md). Use that document as the single audit surface for README claims, workflow jobs, policy enforcement points, artifact paths, ownership, and review cadence.
 
 ### Governance Evidence Index
 
@@ -327,7 +327,7 @@ Use this table during reviews to ensure governance controls remain mapped to act
 | Release DAST gate | `.github/workflows/ci-release-gate.yml` -> `dast-analysis` | Release blocks on DAST gate criteria |
 | Artifact signing, SBOM, and provenance attestations | `.github/workflows/ci-release-gate.yml` -> `build-push-*`, `generate-slsa-provenance-*-*` | Attestations bound to trusted workflow identity for each deployable image |
 | GitOps promotion manifest validation | `.github/workflows/gitops-enforce.yml` -> `gitops` | Promotion PR creation stops if Kyverno CLI policy evaluation fails; worker/frontend digests advance directly and backend canary digest advances without implicitly promoting stable |
-| Backend release-in-progress governance | `k8s/overlays/prod/backend-rollout.yaml`; `docs/rollout-gates-policy.md`; `docs/canary-promotion-checklist.md` | Backend canary promotion requires explicit evidence, stable/canary distinction, and defined rollback triggers |
+| Backend release-in-progress governance | `k8s/overlays/prod/backend-rollout.yaml`; `docs/governance/rollout-gates-policy.md`; `docs/release-patterns/canary-promotion-checklist.md` | Backend canary promotion requires explicit evidence, stable/canary distinction, and defined rollback triggers |
 
 ### SLSA Level Review and Requirement Mapping
 
@@ -340,7 +340,9 @@ Why this statement is defensible:
 - runtime and GitOps verification validate signature and required attestations, including explicit SLSA builder identity, predicate type, build type, workflow entry point, and tag-based source expectations, before promotion or deployment
 - some SLSA L3 expectations, such as independently validated hermetic or reproducible builds, are not yet fully evidenced in this repository
 
-The active sequencing and pilot record for those remaining L3-aligned controls live in [`docs/slsa-l3-sequencing-plan.md`](slsa-l3-sequencing-plan.md) and [`docs/slsa-l3-pilot-retrospective.md`](slsa-l3-pilot-retrospective.md).
+Current builder-isolation assumptions and the explicit non-claims for hosted-runner trust are documented in [`docs/builder-isolation-assumptions.md`](/docs/supply-chain/builder-isolation-assumptions.md).
+
+The active sequencing and pilot record for those remaining L3-aligned controls live in [`docs/slsa-l3-sequencing-plan.md`](/docs/supply-chain/slsa-l3-sequencing-plan.md) and [`docs/reproducibility-pilot-backend.md`](/docs/supply-chain/reproducibility-pilot-backend.md).
 
 | SLSA requirement (build track) | Implemented control | Evidence source / workflow artifact |
 | :--- | :--- | :--- |
@@ -375,7 +377,7 @@ Use `summary.md` for quick review and `report.json` for durable quarterly eviden
 
 ### Governance SLOs
 
-Governance operating targets and the weekly report path are defined in [`governance-slos.md`](governance-slos.md).
+Governance operating targets and the weekly report path are defined in [`governance-slos.md`](/docs/governance/governance-slos.md).
 
 Automated reporting source:
 

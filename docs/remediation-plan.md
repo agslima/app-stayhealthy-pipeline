@@ -4,76 +4,13 @@
 [//]: # (review_cadence: Quarterly)
 [//]: # (last_reviewed: 2026-04-11)
 
+<!--
 This plan is an implementation-aware review of repository alignment against the commitments in `README.md`, the documented governance model, and the active CI/CD controls.
 
 It is intentionally task-oriented so maintainers can execute and audit remediation incrementally.
+-->
 
-## Alignment Review
-
-### Objective A: Documentation Alignment and Validation
-
-| Area | Current state | Alignment verdict | Why this verdict matters |
-| :--- | :--- | :--- | :--- |
-| README governance claims are mapped to enforcement points | Claim-to-control mapping exists in `docs/governance-evidence-index.md` and is linked from governance docs | Mostly aligned | The repository can trace claims to workflows and policies, but the audit burden remains high when workflows or artifacts evolve. |
-| Governance model reflects trusted-path assumptions | `docs/governance.md` clearly defines trust boundaries and required GitHub settings | Aligned | This is strong governance evidence and supports auditability of external controls. |
-| Runtime policy claims for signed and attested deployment | README, governance docs, and the Kyverno policy set document and enforce signature and attestation checks | Aligned | This is the project's strongest integrity boundary and should remain fail-closed. |
-| Operational evidence narrative | README posture table is generated from Snyk evidence, while release enforcement is driven by Trivy and ZAP | Partially aligned, clarified but fragile | The boundary is documented, but multiple evidence streams can still confuse contributors and reviewers without stronger guardrails. |
-| Local developer onboarding promises | Root README includes the command map and points to `app/readme.md` and package-level flow | Aligned | Onboarding is substantially improved and reproducible for core local tasks. |
-
-### Objective B: Critical Project Analysis
-
-#### Architecture integrity
-
-Strengths:
-
-- clear control-plane separation across PR gate, release gate, GitOps enforcement, and runtime admission
-- layered supply-chain controls including digest pinning, signatures, attestations, and policy verification
-- explicit governance assumptions and required settings
-
-Primary integrity risks:
-
-- some controls depend on external GitHub configuration and secrets, which creates drift risk if not continuously validated
-- durable retention of attestation-verification outcomes remains incomplete, leaving evidence too workflow-log-centric for long-horizon audits
-
-#### Process efficiency
-
-Strengths:
-
-- good fail-fast sequencing across release and promotion
-- existing automation for governance drift, metadata freshness, and SLO reporting
-
-Primary efficiency risks:
-
-- overlapping security evidence channels increase review overhead
-- remediation tracking is spread across docs, workflows, and issues and can be hard to prioritize operationally
-
-#### Sustainability
-
-Strengths:
-
-- quarterly metadata cadence and the evidence index establish governance hygiene
-- the SLO framework provides a path to measurable program health
-
-Primary sustainability risks:
-
-- ownership fields in remediation and governance artifacts remain under-specified in places
-- long-term roadmap items such as durable evidence storage and SLSA L3 sequencing are acknowledged but not yet execution-ready
-
-### Objective C: Scope Fit
-
-#### Deficient and needs remediation now
-
-1. Durable, queryable storage for signature and attestation verification outcomes.
-2. Stronger anti-drift automation between README claims, governance index rows, and workflow or job names.
-3. Clear owner and accountability mapping for unresolved strategic epics.
-
-#### Exceeds baseline expectations and should be retained as strengths
-
-1. Governance-settings audit workflow for external GitHub controls.
-2. Governance metadata freshness checks integrated into CI.
-3. Governance SLO reporting automation with fixture modes for deterministic validation.
-
-## Prioritized Execution Plan
+## Execution Plan
 
 ### Milestone M0: 0 to 30 days
 
@@ -86,7 +23,7 @@ Goal: remove the highest residual ambiguity between documented governance commit
 
 Tasks:
 
-- [ ] Add an automated check that validates all top-level README governance claims have corresponding rows in `docs/governance-evidence-index.md`.
+- [ ] Add an automated check that validates all top-level README governance claims have corresponding rows in `docs/governance/governance-evidence-index.md`.
 - [ ] Add a CI check for broken references to workflow files and jobs used in the evidence index.
 - [ ] Fail with actionable guidance explaining which claim or row is missing or stale.
 
@@ -263,14 +200,14 @@ Evidence required:
 
 Tasks:
 
-- [x] Build a gap matrix for hermeticity, reproducibility, build isolation, and dependency provenance in [`docs/slsa-l3-sequencing-plan.md`](slsa-l3-sequencing-plan.md).
-- [x] Prioritize controls by risk reduction versus operational cost in [`docs/slsa-l3-sequencing-plan.md`](slsa-l3-sequencing-plan.md).
-- [x] Run one pilot control with explicit success, failure, and rollback criteria in [`docs/slsa-l3-pilot-retrospective.md`](slsa-l3-pilot-retrospective.md).
+- [x] Build a gap matrix for hermeticity, reproducibility, build isolation, and dependency provenance in [`docs/slsa-l3-sequencing-plan.md`](/docs/supply-chain/slsa-l3-sequencing-plan.md).
+- [x] Prioritize controls by risk reduction versus operational cost in [`docs/slsa-l3-sequencing-plan.md`](/docs/supply-chain/slsa-l3-sequencing-plan.md).
+- [x] Run one pilot control with explicit success, failure, and rollback criteria, with evidence captured in [`docs/reproducibility-pilot-backend.md`](/docs/supply-chain/reproducibility-pilot-backend.md).
 
 Deliverables:
 
-- time-phased roadmap: [`docs/slsa-l3-sequencing-plan.md`](slsa-l3-sequencing-plan.md)
-- pilot report: [`docs/slsa-l3-pilot-retrospective.md`](slsa-l3-pilot-retrospective.md)
+- time-phased roadmap: [`docs/slsa-l3-sequencing-plan.md`](/docs/supply-chain/slsa-l3-sequencing-plan.md)
+- pilot report: [`docs/reproducibility-pilot-backend.md`](/docs/supply-chain/reproducibility-pilot-backend.md)
 
 Acceptance criteria:
 
@@ -279,7 +216,7 @@ Acceptance criteria:
 Evidence required:
 
 - approved roadmap: pending maintainer sign-off on the sequencing plan
-- pilot retrospective: [`docs/slsa-l3-pilot-retrospective.md`](slsa-l3-pilot-retrospective.md)
+- pilot retrospective: [`docs/reproducibility-pilot-backend.md`](/docs/supply-chain/reproducibility-pilot-backend.md)
 
 #### Epic M2-E3: Governance SLO operationalization
 

@@ -19,7 +19,7 @@ It intentionally focuses on response actions, not tool configuration.
 
 ## Runtime Signal Reference
 
-Use [`runtime-signals.md`](runtime-signals.md) as the minimum go or no-go reference for risky releases.
+Use [`runtime-signals.md`](/docs/governance/runtime-signals.md) as the minimum go or no-go reference for risky releases.
 Risky releases are not considered complete until the required runtime observations are recorded in the release evidence record.
 
 ## Schema Change Rollout Order
@@ -30,7 +30,7 @@ Database releases must model three distinct phases:
 - application release job
 - post-deploy cleanup job in a later release
 
-Use [`schema-change-deployment-procedure.md`](schema-change-deployment-procedure.md) as the canonical deployment sequence and [`database-migration-demo-prescription-status.md`](database-migration-demo-prescription-status.md) as the worked example.
+Use [`schema-change-deployment-procedure.md`](/docs/database/schema-change-deployment-procedure.md) as the canonical deployment sequence and [`database-migration-demo-prescription-status.md`](/docs/database/database-migration-demo-prescription-status.md) as the worked example.
 
 Operational rule:
 
@@ -90,7 +90,7 @@ That means:
 
 ## Async Export Worker: Partial Failure Recovery Story
 
-Use [`async-failure-scenario-worker-retry.md`](async-failure-scenario-worker-retry.md) as the canonical worked example.
+Use [`async-failure-scenario-worker-retry.md`](/docs/async/async-failure-scenario-worker-retry.md) as the canonical worked example.
 
 Scenario summary:
 
@@ -119,8 +119,8 @@ Preferred operator action is recovery through worker restart and normal retry be
 
 ## Production Backend Canary Rollout
 
-Use [`canary-rollout-strategy.md`](canary-rollout-strategy.md) for the rollout model, [`rollout-gates-policy.md`](rollout-gates-policy.md) for promotion rules, and [`canary-rollout-walkthrough.md`](canary-rollout-walkthrough.md) for example evidence.
-Use [`failure-scenarios/canary-health-degrades.md`](failure-scenarios/canary-health-degrades.md) when the canary path degrades under live traffic.
+Use [`canary-rollout-strategy.md`](/docs/release-patterns/canary-rollout-strategy.md) for the rollout model, [`rollout-gates-policy.md`](/docs/governance/rollout-gates-policy.md) for promotion rules, and [`canary-rollout-walkthrough.md`](/docs/release-patterns/canary-rollout-walkthrough.md) for example evidence.
+Use [`failure-scenarios/canary-health-degrades.md`](/docs/release-patterns/failure-scenarios/canary-health-degrades.md) when the canary path degrades under live traffic.
 
 ### Expected steady-state model
 
@@ -133,7 +133,7 @@ Use [`failure-scenarios/canary-health-degrades.md`](failure-scenarios/canary-hea
 1. Render `kubectl kustomize k8s/overlays/prod` and confirm the stable and canary digests.
 2. Check `kubectl get deploy,po,svc -n production -l app=backend`.
 3. Probe `backend-canary` directly and the shared `backend` Service.
-4. Review restart counts, readiness state, recent errors, and runtime signals from [`runtime-signals.md`](runtime-signals.md) during the observation window.
+4. Review restart counts, readiness state, recent errors, and runtime signals from [`runtime-signals.md`](/docs/governance/runtime-signals.md) during the observation window.
 
 ### Promote
 
@@ -142,7 +142,7 @@ Promotion means moving the candidate digest into the stable slot and then scalin
 
 ### Halt and roll back
 
-Stop rollout when rollback triggers in [`rollout-gates-policy.md`](rollout-gates-policy.md) fire.
+Stop rollout when rollback triggers in [`rollout-gates-policy.md`](/docs/governance/rollout-gates-policy.md) fire.
 Preferred rollback is to remove canary exposure while preserving the last known-good stable digest.
 
 ## Pipeline Failure: Security Gate (Trivy)
@@ -211,7 +211,7 @@ Job `Governance & Security Quality Check` fails at `Governance Drift Check (docs
 
 Typical failures include:
 
-- `README claim '<claim>' does not have a matching row in docs/governance-evidence-index.md`
+- `README claim '<claim>' does not have a matching row in docs/governance/governance-evidence-index.md`
 - `claim '<claim>' references missing workflow file '<path>'`
 - `claim '<claim>' references workflow job '<job>' in '<path>', but that job was not found`
 
@@ -220,14 +220,14 @@ Typical failures include:
 1. Open the failed workflow run and inspect the `Governance Drift Check (docs/workflow refs)` step log.
 2. For quarterly review runs, download artifact `governance-settings-audit` and open `governance-drift-check.txt`.
 3. Determine which class of drift occurred:
-   - README claim added or edited without a corresponding row in `docs/governance-evidence-index.md`
+   - README claim added or edited without a corresponding row in `docs/governance/governance-evidence-index.md`
    - workflow file renamed or removed
    - workflow job id/name changed without updating the evidence index
-4. Compare the referenced workflow file under `.github/workflows/` with the affected row in `docs/governance-evidence-index.md`.
+4. Compare the referenced workflow file under `.github/workflows/` with the affected row in `docs/governance/governance-evidence-index.md`.
 
 ### Resolution
 
-- If the README claim is intentional, add or update the matching row in `docs/governance-evidence-index.md`.
+- If the README claim is intentional, add or update the matching row in `docs/governance/governance-evidence-index.md`.
 - If a workflow or job was renamed intentionally, update the `Workflow job enforcement` column to the active file and job id(s).
 - If the workflow/job removal was accidental, restore the governance control or revert the change before merging.
 - Re-run `make governance-drift-check` locally before pushing the fix.
