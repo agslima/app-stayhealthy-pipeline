@@ -83,13 +83,24 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - name: Install SLSA-Verifier
         uses: slsa-framework/slsa-verifier/actions/installer@ea584f4502babc6f60d9bc799dbbb13c1caa9ee6 # v2.7.1
+      - name: Provision Token File
+        shell: bash
+        run: |
+          TOKEN_PATH="${RUNNER_TEMP}/github_token.txt"
+          touch "$TOKEN_PATH"
+          chmod 600 "$TOKEN_PATH"
+          echo "${{ secrets.GITHUB_TOKEN }}" > "$TOKEN_PATH"
       - name: Resolve Release Run Metadata
         id: release-meta
         uses: ./.github/actions/resolve-run-metadata
         with:
           run-id: ${{ needs.verify-context.outputs.release_run_id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token-file: ${{ runner.temp }}/github_token.txt
           expected-workflow-name: 'Release'
+      - name: Cleanup Token File
+        if: always()
+        shell: bash
+        run: rm -f "${RUNNER_TEMP}/github_token.txt"
       - name: Print Validated Data
         run: |
           echo "Ref: ${{ steps.release-meta.outputs.release_ref }}"
