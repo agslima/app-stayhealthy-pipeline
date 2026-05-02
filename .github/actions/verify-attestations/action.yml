@@ -68,7 +68,7 @@ runs:
         cosign verify-attestation "$IMAGE" \
           --type "https://slsa.dev/provenance/v1" \
           --certificate-oidc-issuer "${OIDC_ISSUE}" \
-          --certificate-identity "${REPO_PREFIX}/${{ inputs.build-workflow-path }}${TAG_REGEX}" \
+          --certificate-identity-regexp "${REPO_PREFIX}/${{ inputs.build-workflow-path }}${TAG_REGEX}" \
           > /dev/null"
 
         echo "🔎 Verifying SLSA builder/source expectations..."
