@@ -22,56 +22,16 @@ jobs:
     permissions:
       contents: read
     outputs:
-      release_run_id: ${{ steps.validate.outputs.release_run_id }}
+      release_run_id: ${{ steps.source-validation.outputs.release_run_id }}
     steps:
-      - name: Guardrails - Validate promotion source
-        id: validate
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          CURRENT_REPO: ${{ github.repository }}
-          INPUT_RUN_ID: ${{ inputs.run_id }}
-          WR_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
-          WR_HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
-          WR_EVENT: ${{ github.event.workflow_run.event }}
-          WR_REF: ${{ github.event.workflow_run.ref }}
-          WR_HEAD_REF: ${{ github.event.workflow_run.head_branch }}
-          WR_RUN_ID: ${{ github.event.workflow_run.id }}
-        run: |
-          set -euo pipefail
-
-          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            test -n "$INPUT_RUN_ID" || (echo "::error::workflow_dispatch requires run_id input."; exit 1)
-            echo "release_run_id=$INPUT_RUN_ID" >> "$GITHUB_OUTPUT"
-            echo "✅ Manual promotion request validated (run_id provided)."
-            exit 0
-          fi
-          test -n "$WR_RUN_ID" || (echo "::error::Missing workflow_run.id for workflow_run trigger."; exit 1)
-          if [[ "$WR_CONCLUSION" != "success" ]]; then
-            echo "::error::Upstream Release workflow did not succeed (conclusion=$WR_CONCLUSION)."
-            exit 1
-          fi
-          if [[ "$WR_HEAD_REPO" != "$CURRENT_REPO" ]]; then
-            echo "::error::Security: workflow_run originated from a different repository ($WR_HEAD_REPO)."
-            exit 1
-          fi
-          if [[ "$WR_EVENT" != "push" ]]; then
-            echo "::error::Unsupported Release trigger event ($WR_EVENT). Expected push from a release tag."
-            exit 1
-          fi
-          WR_EFFECTIVE_REF="${WR_REF:-$WR_HEAD_REF}"
-          if [[ -z "$WR_EFFECTIVE_REF" ]]; then
-            echo "::error::Missing upstream release ref for workflow_run trigger."
-            exit 1
-          fi
-          if [[ "$WR_EFFECTIVE_REF" != refs/* ]]; then
-            WR_EFFECTIVE_REF="refs/tags/$WR_EFFECTIVE_REF"
-          fi
-          if [[ "$WR_EFFECTIVE_REF" != refs/tags/* ]]; then
-            echo "::error::Upstream Release workflow must originate from a tag push (ref=$WR_EFFECTIVE_REF)."
-            exit 1
-          fi
-          echo "release_run_id=$WR_RUN_ID" >> "$GITHUB_OUTPUT"
-          echo "✅ workflow_run promotion source validated."
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+      - name: Validate Source and Get Run ID
+        id: source-validation
+        uses: ./.github/actions/validate-promotion
+        with:
+          run_id: ${{ github.event.inputs.run_id }} # Only populated on workflow_dispatch
 
   gitops:
     runs-on: ubuntu-latest
@@ -92,18 +52,15 @@ jobs:
       SLSA_PREDICATE_TYPE: "https://slsa.dev/provenance/v1"      
       SLSA_VERIFIER_BUILDER_ID: "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml"
       OIDC_ISSUER: "https://token.actions.githubusercontent.com"
-      YQ_VERSION: "v4.44.3"
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: audit
-
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
-      
       - name: Install go
         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
         with:
@@ -111,95 +68,46 @@ jobs:
           check-latest: false
       - name: Install Cosign
         uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
-      
       - name: Install Kyverno CLI
         uses: kyverno/action-install-cli@fcee92fca5c883169ef9927acf543e0b5fc58289 # v0.2.0
         with:
           release: 'v1.17.1'
           verify: true
-      - name: Install yq
-        run: |
-          set -euo pipefail
-          YQ_BIN_URL="https://github.com/mikefarah/yq/releases/download/${{env.YQ_VERSION}}/yq_linux_amd64"
-          YQ_CHECKSUMS_URL="https://github.com/mikefarah/yq/releases/download/${{env.YQ_VERSION}}/checksums"
-          TMP_DIR="$(mktemp -d)"
-          trap 'rm -rf "$TMP_DIR"' EXIT
-
-          curl -fsSL "$YQ_BIN_URL" -o "${TMP_DIR}/yq_linux_amd64"
-          curl -fsSL "$YQ_CHECKSUMS_URL" -o "${TMP_DIR}/checksums"
-
-          grep -E '[[:space:]]+\*?yq_linux_amd64$' "${TMP_DIR}/checksums" > "${TMP_DIR}/yq_linux_amd64.sha256" \
-            || { echo "::error::yq checksum entry missing for ${YQ_VERSION}"; exit 1; }
-
-          (
-            cd "$TMP_DIR"
-            sha256sum -c yq_linux_amd64.sha256
-          )
-
-          sudo install -m 0755 "${TMP_DIR}/yq_linux_amd64" /usr/local/bin/yq
-          sudo chmod +x /usr/local/bin/yq
-          yq --version   
+      - name: yq - portable yaml processor
+        uses: mikefarah/yq@751d8ad57b84f1794661bc70c0afb92a22ad7b3c # v4.53.2
       - name: Install Kustomize
         uses: imranismail/setup-kustomize@53f941b41dca13ed61874bbc6b4b6e1562877530 # v3.0.0
-      
       - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 #v4.1.0
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
       - name: Install SLSA-Verifier
         uses: slsa-framework/slsa-verifier/actions/installer@ea584f4502babc6f60d9bc799dbbb13c1caa9ee6 # v2.7.1
+      - name: Provision Token File
+        shell: bash
+        run: |
+          TOKEN_PATH="${RUNNER_TEMP}/github_token.txt"
+          touch "$TOKEN_PATH"
+          chmod 600 "$TOKEN_PATH"
+          echo "${{ secrets.GITHUB_TOKEN }}" > "$TOKEN_PATH"
       - name: Resolve Release Run Metadata
         id: release-meta
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RUN_ID: ${{ needs.verify-context.outputs.release_run_id }}
+        uses: ./.github/actions/resolve-run-metadata
+        with:
+          run-id: ${{ needs.verify-context.outputs.release_run_id }}
+          github-token-file: ${{ runner.temp }}/github_token.txt
+          expected-workflow-name: 'Release'
+      - name: Cleanup Token File
+        if: always()
+        shell: bash
+        run: rm -f "${RUNNER_TEMP}/github_token.txt"
+      - name: Print Validated Data
         run: |
-          set -euo pipefail
-          test -n "$RUN_ID" || (echo "::error::Missing release run id."; exit 1)
-          API_URL="${{ github.api_url }}/repos/${{ github.repository }}/actions/runs/${RUN_ID}"
-          RUN_JSON="$(curl -fsSL \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            "$API_URL")"
-          RELEASE_WORKFLOW_NAME="$(echo "$RUN_JSON" | jq -r '.name // empty')"
-          RELEASE_CONCLUSION="$(echo "$RUN_JSON" | jq -r '.conclusion // empty')"
-          RELEASE_EVENT="$(echo "$RUN_JSON" | jq -r '.event // empty')"
-          RELEASE_REF="$(echo "$RUN_JSON" | jq -r '.ref // empty')"
-          RELEASE_HEAD_REF="$(echo "$RUN_JSON" | jq -r '.head_branch // empty')"
-          RELEASE_SHA="$(echo "$RUN_JSON" | jq -r '.head_sha // empty')"
-          if [[ "$RELEASE_WORKFLOW_NAME" != "Release" ]]; then
-            echo "::error::Run ${RUN_ID} is not from workflow 'Release' (found: ${RELEASE_WORKFLOW_NAME:-unknown})."
-            exit 1
-          fi
-          if [[ "$RELEASE_CONCLUSION" != "success" ]]; then
-            echo "::error::Release run ${RUN_ID} did not succeed (conclusion: ${RELEASE_CONCLUSION:-unknown})."
-            exit 1
-          fi
-          if [[ "$RELEASE_EVENT" != "push" ]]; then
-            echo "::error::Release run ${RUN_ID} must be triggered by push (event: ${RELEASE_EVENT:-unknown})."
-            exit 1
-          fi
-          RELEASE_EFFECTIVE_REF="${RELEASE_REF:-$RELEASE_HEAD_REF}"
-          if [[ -z "$RELEASE_EFFECTIVE_REF" ]]; then
-            echo "::error::Could not resolve release ref for run ${RUN_ID}."
-            exit 1
-          fi
-          if [[ "$RELEASE_EFFECTIVE_REF" != refs/tags/v*.*.* && "$RELEASE_EFFECTIVE_REF" != v*.*.* ]]; then 
-            echo "::error::Release run ${RUN_ID} must originate from a tag push (ref: ${RELEASE_EFFECTIVE_REF})." 
-            exit 1 
-          fi
-          if [[ "$RELEASE_EFFECTIVE_REF" != refs/* ]]; then
-            RELEASE_EFFECTIVE_REF="refs/tags/$RELEASE_EFFECTIVE_REF"
-          fi
-          RELEASE_TAG="${RELEASE_EFFECTIVE_REF#refs/tags/}"
-          test -n "$RELEASE_SHA" || (echo "::error::Could not resolve head SHA for release run ${RUN_ID}."; exit 1)
-          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
-          echo "release_sha=$RELEASE_SHA" >> "$GITHUB_OUTPUT"
-          echo "release_ref=$RELEASE_EFFECTIVE_REF" >> "$GITHUB_OUTPUT"
-          echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "Ref: ${{ steps.release-meta.outputs.release_ref }}"
+          echo "Tag: ${{ steps.release-meta.outputs.release_tag }}"
+          echo "SHA: ${{ steps.release-meta.outputs.release_sha }}"
       - name: Download Digests from Release Workflow
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v4.1.8.0.1
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           run-id: ${{ steps.release-meta.outputs.run_id }}
           merge-multiple: true
@@ -211,7 +119,6 @@ jobs:
           DOCKER_USERNAME: ${{ vars.DOCKER_HUB_USERNAME }}
         run: |
           set -euo pipefail
-
           COMPONENTS="backend worker frontend"
           for COMP in $COMPONENTS; do
             REPO="app-stayhealthy-${COMP}"
@@ -230,62 +137,34 @@ jobs:
             echo "${PREFIX}_DIGEST=${DIGEST}" >> "$GITHUB_ENV"
             echo "${PREFIX}_IMAGE=docker.io/${DOCKER_USERNAME}/${REPO}@${DIGEST}" >> "$GITHUB_ENV"
           done
-          echo "✅ Loaded and validated all digests successfully."
-      - name: Verify Signatures + Required Attestations (hard gate)
-        env:
-          RELEASE_REF: ${{ steps.release-meta.outputs.release_ref }}
-          RELEASE_TAG: ${{ steps.release-meta.outputs.release_tag }}
-          BACKEND_IMAGE: ${{ env.BACKEND_IMAGE }}
-          WORKER_IMAGE: ${{ env.WORKER_IMAGE }}
-          FRONTEND_IMAGE: ${{ env.FRONTEND_IMAGE }}
-        run: |
-          set -euo pipefail
-  
-          verify_all () {
-            local IMAGE="$1"
-            
-            echo "🔐 Verifying signature for $IMAGE"
-            cosign verify "$IMAGE" \
-              --certificate-oidc-issuer "${OIDC_ISSUER}" \
-              --certificate-identity-regexp "^https://github.com/${{ github.repository }}/${BUILD_WORKFLOW_PATH}@refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$"
-            
-            echo "🧾 Verifying SBOM attestation..."
-            cosign verify-attestation "$IMAGE" \
-              --type "${SBOM_PREDICATE_TYPE}" \
-              --certificate-oidc-issuer "${OIDC_ISSUER}" \
-              --certificate-identity-regexp "^https://github.com/${{ github.repository }}/${BUILD_WORKFLOW_PATH}@refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$" \
-              > /dev/null
-
-            echo "🧾 Verifying Trivy attestation..."
-            cosign verify-attestation "$IMAGE" \
-              --type "${TRIVY_PREDICATE_TYPE}" \
-              --certificate-oidc-issuer "${OIDC_ISSUER}" \
-              --certificate-identity-regexp "^https://github.com/${{ github.repository }}/${TRIVY_WORKFLOW_PATH}@refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$" \
-              > /dev/null
-
-            echo "🧾 Verifying ZAP attestation..."
-            cosign verify-attestation "$IMAGE" \
-              --type "${ZAP_PREDICATE_TYPE}" \
-              --certificate-oidc-issuer "${OIDC_ISSUER}" \
-              --certificate-identity-regexp "^https://github.com/${{ github.repository }}/${ZAP_WORKFLOW_PATH}@refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$" \
-              > /dev/null
-
-            echo "🧾 Verifying SLSA provenance attestation identity..."
-            cosign verify-attestation "$IMAGE" \
-              --type "${SLSA_PREDICATE_TYPE}" \
-              --certificate-oidc-issuer "${OIDC_ISSUER}" \
-              --certificate-identity-regexp "^https://github.com/${{ github.repository }}/${BUILD_WORKFLOW_PATH}@refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$"
-
-            echo "🔎 Verifying SLSA builder/source expectations..."
-            slsa-verifier verify-image "$IMAGE" \
-              --builder-id "${SLSA_VERIFIER_BUILDER_ID}" \
-              --source-uri "github.com/${{ github.repository }}" \
-              --source-tag "$RELEASE_TAG"            
-          }
-          verify_all "${BACKEND_IMAGE}"
-          verify_all "${WORKER_IMAGE}"
-          verify_all "${FRONTEND_IMAGE}"
-          echo "✅ All signatures & attestations verified."     
+          echo "✅ Loaded and validated all digests successfully." 
+      - name: Verify Backend Signatures (Hard Gate)
+        uses: ./.github/actions/verify-attestations
+        with:
+          image: ${{ env.BACKEND_IMAGE }}
+          release-ref: ${{ steps.release-meta.outputs.release_ref }}
+          release-tag: ${{ steps.release-meta.outputs.release_tag }}
+          build-workflow-path: ${{ env.BUILD_WORKFLOW_PATH }}
+          trivy-workflow-path: ${{ env.TRIVY_WORKFLOW_PATH }}
+          zap-workflow-path: ${{ env.ZAP_WORKFLOW_PATH }}
+      - name: Verify Worker Signatures (Hard Gate)
+        uses: ./.github/actions/verify-attestations
+        with:
+          image: ${{ env.WORKER_IMAGE }}
+          release-ref: ${{ steps.release-meta.outputs.release_ref }}
+          release-tag: ${{ steps.release-meta.outputs.release_tag }}
+          build-workflow-path: ${{ env.BUILD_WORKFLOW_PATH }}
+          trivy-workflow-path: ${{ env.TRIVY_WORKFLOW_PATH }}
+          zap-workflow-path: ${{ env.ZAP_WORKFLOW_PATH }}
+      - name: Verify Frontend Signatures (Hard Gate)
+        uses: ./.github/actions/verify-attestations
+        with:
+          image: ${{ env.FRONTEND_IMAGE }}
+          release-ref: ${{ steps.release-meta.outputs.release_ref }}
+          release-tag: ${{ steps.release-meta.outputs.release_tag }}
+          build-workflow-path: ${{ env.BUILD_WORKFLOW_PATH }}
+          trivy-workflow-path: ${{ env.TRIVY_WORKFLOW_PATH }}
+          zap-workflow-path: ${{ env.ZAP_WORKFLOW_PATH }}     
       - name: Update README.MD - verification section
         env:
           BACKEND_IMAGE: ${{ env.BACKEND_IMAGE }}
@@ -317,75 +196,28 @@ jobs:
             echo "::error::Prod overlay digests not set correctly"
             exit 1
           )            
-      - name: Validate rendered prod manifests
-        run: |
-          set -euo pipefail
-          LOG_FILE="kyverno-gitops.log"
-          : > "$LOG_FILE"
-          # Render the manifest
-          RENDERED_MANIFEST=$(mktemp)
-          kustomize build k8s/overlays/prod > "$RENDERED_MANIFEST"
-          test -s "$RENDERED_MANIFEST" || (echo "::error::Rendered manifest is empty"; exit 1)
-          echo "=== Namespaces in rendered YAML ===" | tee -a "$LOG_FILE"
-          yq -r 'select(.metadata != null) | .kind + " " + (.metadata.namespace // "NONE") + " " + .metadata.name' "$RENDERED_MANIFEST" \
-          | sort | uniq -c | tee -a "$LOG_FILE"
-          echo "=== Images in rendered YAML ===" | tee -a "$LOG_FILE"
-          yq -r '
-             select(.kind=="Deployment") |
-             .metadata.name as $n |
-             .spec.template.spec.containers[].image |
-             $n + " => " + .
-          ' "$RENDERED_MANIFEST" | tee -a "$LOG_FILE"
-          echo "=== Kyverno policy evaluation (split policies) ===" | tee -a "$LOG_FILE"
-          POLICIES=(
-            "k8s/policies/cluster/verify-signature.yaml"
-            "k8s/policies/cluster/verify-trivy.yaml"
-            "k8s/policies/cluster/verify-zap.yaml"
-            "k8s/policies/cluster/verify-sbom.yaml"
-            "k8s/policies/cluster/verify-slsa.yaml"
-          )
-          for POLICY in "${POLICIES[@]}"; do
-            echo "" | tee -a "$LOG_FILE"
-            echo "------------------------------------------------------------" | tee -a "$LOG_FILE"
-            echo "Applying policy: $POLICY" | tee -a "$LOG_FILE"
-            echo "------------------------------------------------------------" | tee -a "$LOG_FILE"
-            kyverno apply "$POLICY" \
-              --resource "$RENDERED_MANIFEST" \
-              --registry -v=6 \
-              --detailed-results \
-              | tee -a "$LOG_FILE"
-          done
-          echo "✅ Policy Validation Passed." | tee -a "$LOG_FILE"
-      - name: Upload Kyverno Log
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - name: Validate Prod Manifests
+        uses: ./.github/actions/validate-kubernetes-manifests
         with:
-          name: kyverno-gitops-log
-          path: kyverno-gitops.log
-          retention-days: 30
-      - name: Compose PR Metadata
-        run: |
-          set -euo pipefail
-          RUN_ID="${{ steps.release-meta.outputs.run_id }}"
-          RELEASE_SHA="${{ steps.release-meta.outputs.release_sha }}"
-          REPO="${{ github.repository }}"
-          SERVER_URL="${{ github.server_url }}"
-          echo "RELEASE_RUN_URL=${SERVER_URL}/${REPO}/actions/runs/${RUN_ID}" >> $GITHUB_ENV
-          echo "RELEASE_SHA=${RELEASE_SHA}" >> $GITHUB_ENV
-          # Use SHA-based branch name to avoid collisions
-          echo "PR_BRANCH=gitops/deploy-${RELEASE_SHA}" >> $GITHUB_ENV
+          overlay-path: 'k8s/overlays/prod'
+          log-artifact-name: 'kyverno-gitops-prod-log'
+          policies: |
+            k8s/policies/cluster/verify-signature.yaml
+            k8s/policies/cluster/verify-trivy.yaml
+            k8s/policies/cluster/verify-zap.yaml
+            k8s/policies/cluster/verify-sbom.yaml
+            k8s/policies/cluster/verify-slsa.yaml
       - name: Create GitOps PR
-        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 #v8.1.1
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 #v8.1.1 
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: deploy promote ${{ env.RELEASE_SHA }}"
-          title: "chore: deploy release (${{ env.RELEASE_SHA }})"
+          commit-message: "chore: deploy promote ${{ steps.release-meta.outputs.release_sha }}"
+          title: "chore: deploy release (${{ steps.release-meta.outputs.release_sha }})"
           body: |
             Automated GitOps promotion from a successful Release workflow run.
             **Source**
-            - Release Run: ${{ env.RELEASE_RUN_URL }}
-            - Head SHA: `${{ env.RELEASE_SHA }}`
-            **Pinned Images**
+            - Release Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ steps.release-meta.outputs.run_id }}
+            - Head SHA: `${{ steps.release-meta.outputs.release_sha }}`
             - Backend candidate canary: `${{ env.BACKEND_IMAGE }}`
             - Worker: `${{ env.WORKER_IMAGE }}`
             - Frontend: `${{ env.FRONTEND_IMAGE }}`
@@ -397,8 +229,9 @@ jobs:
             - Trivy attestation: ✅ (`${{ env.TRIVY_PREDICATE_TYPE }}`)
             - ZAP attestation: ✅ (`${{ env.ZAP_PREDICATE_TYPE }}`)
             - SBOM attestation: ✅ (`${{ env.SBOM_PREDICATE_TYPE }}`)
+            - SLSA provenance: ✅ (`${{ env.SLSA_PREDICATE_TYPE }}`)
             - Kyverno structural checks: ✅
-          branch: ${{ env.PR_BRANCH }}
+          branch: gitops/deploy-${{ steps.release-meta.outputs.release_sha }}
           base: main
           author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
           signoff: true
@@ -406,4 +239,5 @@ jobs:
           labels: |
             automated
           assignees: agslima
+          reviewers: agslima
           draft: false
