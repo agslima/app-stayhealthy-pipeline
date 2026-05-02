@@ -1,0 +1,104 @@
+name: 'Resolve Release Run Metadata'
+description: 'Fetches, validates, and exports metadata for a given workflow run ID using the GitHub API.'
+
+inputs:
+  run-id:
+    description: 'The GitHub Actions run ID to resolve'
+    required: true
+  github-token:
+    description: 'GitHub token with read access to actions/runs'
+    required: true
+  expected-workflow-name:
+    description: 'The expected name of the workflow'
+    default: 'Release'
+
+outputs:
+  run_id:
+    description: 'The validated run ID'
+    value: ${{ steps.resolve.outputs.run_id }}
+  release_sha:
+    description: 'The commit SHA of the release run'
+    value: ${{ steps.resolve.outputs.release_sha }}
+  release_ref:
+    description: 'The full ref of the release run (e.g., refs/tags/v1.0.0)'
+    value: ${{ steps.resolve.outputs.release_ref }}
+  release_tag:
+    description: 'The tag of the release run (e.g., v1.0.0)'
+    value: ${{ steps.resolve.outputs.release_tag }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Resolve Run Metadata
+      id: resolve
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        RUN_ID: ${{ inputs.run-id }}
+        EXPECTED_WF_NAME: ${{ inputs.expected-workflow-name }}
+      run: |
+        set -euo pipefail
+        
+        test -n "$RUN_ID" || (echo "::error::Missing release run id."; exit 1)
+
+        API_URL="${{ github.api_url }}/repos/${{ github.repository }}/actions/runs/${RUN_ID}"
+        
+        # Fetch data with explicit API versioning
+        RUN_JSON="$(curl -fsSL \
+          -H "Authorization: Bearer ${GH_TOKEN}" \
+          -H "Accept: application/vnd.github+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          "$API_URL")"
+
+        # Parse with jq
+        RELEASE_WORKFLOW_NAME="$(echo "$RUN_JSON" | jq -r '.name // empty')"
+        RELEASE_CONCLUSION="$(echo "$RUN_JSON" | jq -r '.conclusion // empty')"
+        RELEASE_EVENT="$(echo "$RUN_JSON" | jq -r '.event // empty')"
+        RELEASE_REF="$(echo "$RUN_JSON" | jq -r '.ref // empty')"
+        RELEASE_HEAD_REF="$(echo "$RUN_JSON" | jq -r '.head_branch // empty')"
+        RELEASE_SHA="$(echo "$RUN_JSON" | jq -r '.head_sha // empty')"
+
+        # 1. Validate Workflow Name
+        if [[ "$RELEASE_WORKFLOW_NAME" != "$EXPECTED_WF_NAME" ]]; then
+          echo "::error::Run ${RUN_ID} is not from workflow '${EXPECTED_WF_NAME}' (found: ${RELEASE_WORKFLOW_NAME:-unknown})."
+          exit 1
+        fi
+
+        # 2. Validate Success State
+        if [[ "$RELEASE_CONCLUSION" != "success" ]]; then
+          echo "::error::Release run ${RUN_ID} did not succeed (conclusion: ${RELEASE_CONCLUSION:-unknown})."
+          exit 1
+        fi
+
+        # 3. Validate Trigger Event
+        if [[ "$RELEASE_EVENT" != "push" ]]; then
+          echo "::error::Release run ${RUN_ID} must be triggered by push (event: ${RELEASE_EVENT:-unknown})."
+          exit 1
+        fi
+
+        # 4. Validate Ref Formatting
+        RELEASE_EFFECTIVE_REF="${RELEASE_REF:-$RELEASE_HEAD_REF}"
+        if [[ -z "$RELEASE_EFFECTIVE_REF" ]]; then
+          echo "::error::Could not resolve release ref for run ${RUN_ID}."
+          exit 1
+        fi
+
+        if [[ "$RELEASE_EFFECTIVE_REF" != refs/tags/v*.*.* && "$RELEASE_EFFECTIVE_REF" != v*.*.* ]]; then 
+          echo "::error::Release run ${RUN_ID} must originate from a tag push (ref: ${RELEASE_EFFECTIVE_REF})." 
+          exit 1 
+        fi
+
+        if [[ "$RELEASE_EFFECTIVE_REF" != refs/* ]]; then
+          RELEASE_EFFECTIVE_REF="refs/tags/$RELEASE_EFFECTIVE_REF"
+        fi
+        
+        RELEASE_TAG="${RELEASE_EFFECTIVE_REF#refs/tags/}"
+        test -n "$RELEASE_SHA" || (echo "::error::Could not resolve head SHA for release run ${RUN_ID}."; exit 1)
+
+        # 5. Export to outputs
+        echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+        echo "release_sha=$RELEASE_SHA" >> "$GITHUB_OUTPUT"
+        echo "release_ref=$RELEASE_EFFECTIVE_REF" >> "$GITHUB_OUTPUT"
+        echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+        
+        echo "✅ Successfully resolved and validated run metadata."
