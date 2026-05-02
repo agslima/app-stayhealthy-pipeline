@@ -44,7 +44,7 @@ runs:
           echo "::error::Token file not found at provided path."
           exit 1
         fi
-        API_URL="${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID
+        API_URL="${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}"
         # Fetch data with explicit API versioning
         RUN_JSON="$(curl -fsSL \
           --max-time 30 \
