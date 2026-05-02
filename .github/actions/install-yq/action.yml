@@ -23,10 +23,10 @@ runs:
 
         echo "⬇️ Downloading yq ${VERSION} and checksums..."
         curl -fsSL "$YQ_BIN_URL" -o "${TMP_DIR}/yq_linux_amd64"
-        curl -fsSL "$YQ_CHECKSUMS_URL" -o "${TMP_DIR}/checksums"
+        curl -fsSL "$YQ_CHECKSUMS_URL" | tr -d '\r' > "${TMP_DIR}/checksums"
 
         echo "🔍 Verifying binary signature..."
-        grep -E '[[:space:]]+\*?yq_linux_amd64$' "${TMP_DIR}/checksums" > "${TMP_DIR}/yq_linux_amd64.sha256" \
+        grep -E '[[:space:]]+\*?(\./)?yq_linux_amd64$' "${TMP_DIR}/checksums" > "${TMP_DIR}/yq_linux_amd64.sha256" \
           || { echo "::error::yq checksum entry missing for ${VERSION}"; exit 1; }
 
         (
