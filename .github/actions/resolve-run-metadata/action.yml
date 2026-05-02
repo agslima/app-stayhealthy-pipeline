@@ -76,22 +76,22 @@ runs:
           exit 1
         fi
 
-        # 4. Validate Ref Formatting
+        # 4. Validate Ref Formatting strictly
         RELEASE_EFFECTIVE_REF="${RELEASE_REF:-$RELEASE_HEAD_REF}"
+        
         if [[ -z "$RELEASE_EFFECTIVE_REF" ]]; then
           echo "::error::Could not resolve release ref for run ${RUN_ID}."
           exit 1
         fi
 
-        if [[ "$RELEASE_EFFECTIVE_REF" != refs/tags/v*.*.* && "$RELEASE_EFFECTIVE_REF" != v*.*.* ]]; then 
+        # 🚨 HARD GATE: Ref must explicitly be a full tag ref.
+        # Explicitly reject bare tags (e.g., "v1.2.3") or branch names masquerading as tags.
+        # No local string manipulation or normalization is permitted.
+        if [[ "$RELEASE_EFFECTIVE_REF" != refs/tags/v*.*.* ]]; then 
           echo "::error::Release run ${RUN_ID} must originate from a tag push (ref: ${RELEASE_EFFECTIVE_REF})." 
           exit 1 
         fi
 
-        if [[ "$RELEASE_EFFECTIVE_REF" != refs/* ]]; then
-          RELEASE_EFFECTIVE_REF="refs/tags/$RELEASE_EFFECTIVE_REF"
-        fi
-        
         RELEASE_TAG="${RELEASE_EFFECTIVE_REF#refs/tags/}"
         test -n "$RELEASE_SHA" || (echo "::error::Could not resolve head SHA for release run ${RUN_ID}."; exit 1)
 
