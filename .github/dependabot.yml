@@ -50,8 +50,8 @@ updates:
       - "nodejs"
       - "backend"
 
-  # 3. Backend Dependencies
-  # Looks for package.json in the backend folder
+  # 3. Frontend Dependencies
+  # Looks for package.json in the client folder
   - package-ecosystem: "npm"
     directory: "/app/client"
     schedule:
