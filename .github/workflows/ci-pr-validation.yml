@@ -312,6 +312,12 @@ jobs:
       - name: Governance metadata freshness check
         run: make governance-metadata-check
 
+      - name: Install workflow provenance dependencies
+        run: python3 -m pip install 'PyYAML==6.0.3'
+
+      - name: Workflow input provenance check
+        run: make checke-provenance
+
   # ==================================================================
   # JOB 4B: SECURITY SCANS
   # ==================================================================

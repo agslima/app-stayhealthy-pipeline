@@ -113,6 +113,9 @@ governance-checks: governance-drift-check governance-metadata-check ## Run local
 workflow-input-provenance-check: guard-governance ## Check pinning of high-trust workflow inputs
 	python3 "$(WORKFLOW_PROVENANCE_SCRIPT)"
 
+.PHONY: checke-provenance
+checke-provenance: workflow-input-provenance-check ## Alias for high-trust workflow input provenance check
+
 .PHONY: docs-metadata-check
 docs-metadata-check: guard-governance ## Check standardized metadata comments in maintained docs pages
 	python3 "$(DOCS_METADATA_ASSERT)"
