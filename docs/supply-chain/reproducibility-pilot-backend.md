@@ -52,7 +52,6 @@ Failure criteria:
 Rollback path:
 
 - remove the `reproducibility-pilot-backend` job and the reporting script if the pilot creates unacceptable release noise or runner cost
-- do not relax existing signing, provenance, scanning, or admission controls as part of rollback
 
 ## Evidence Path
 
