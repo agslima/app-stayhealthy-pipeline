@@ -1,25 +1,22 @@
 name: 'Install Secure yq'
-description: 'Downloads and installs yq with strict cryptographic checksum verification against a trusted, pinned hash.'
+description: 'Downloads yq and verifies the binary against the checksums file from the same release over TLS 1.2+ before installing.'
+
 
 inputs:
   version:
-    description: 'The semantic version of yq to install (e.g., v4.44.3)'
+    description: 'The semantic version of yq to install (e.g., v4.46.3)'
     required: true
-    default: 'v4.44.3'
-  expected_sha256:
-    description: 'The pinned, trusted SHA256 checksum of the yq binary'
-    required: true
+    default: 'v4.46.3'
 
 runs:
   using: "composite"
   steps:
     - name: Download, Verify, and Install
       shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
       run: |
         set -euo pipefail
-        
-        # Assign input to a variable for safer handling
-        VERSION="${{ inputs.version }}"
         
         YQ_BIN_URL="https://github.com/mikefarah/yq/releases/download/${VERSION}/yq_linux_amd64"
         YQ_CHECKSUMS_URL="https://github.com/mikefarah/yq/releases/download/${VERSION}/checksums"
@@ -28,8 +25,8 @@ runs:
         trap 'rm -rf "$TMP_DIR"' EXIT
 
         echo "⬇️ Downloading yq ${VERSION} and checksums..."
-        curl -fsSL "$YQ_BIN_URL" -o "${TMP_DIR}/yq_linux_amd64"
-        curl -fsSL "$YQ_CHECKSUMS_URL" | tr -d '\r' > "${TMP_DIR}/checksums"
+        curl --proto '=https' --tlsv1.2 -fsSL "$YQ_BIN_URL" -o "${TMP_DIR}/yq_linux_amd64"
+        curl --proto '=https' --tlsv1.2 -fsSL "$YQ_CHECKSUMS_URL" | tr -d '\r' > "${TMP_DIR}/checksums"
 
         echo "🔍 Verifying binary signature..."
         grep -E '[[:space:]]+\*?(\./)?yq_linux_amd64$' "${TMP_DIR}/checksums" > "${TMP_DIR}/yq_linux_amd64.sha256" \
