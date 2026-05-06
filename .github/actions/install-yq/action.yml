@@ -1,9 +1,10 @@
 name: 'Install Secure yq'
-description: 'Downloads and installs yq with strict cryptographic checksum verification against a trusted, pinned hash.'
+description: 'Downloads yq and verifies the binary against the checksums file from the same release over TLS 1.2+ before installing.'
+
 
 inputs:
   version:
-    description: 'The semantic version of yq to install (e.g., v4.44.3)'
+    description: 'The semantic version of yq to install (e.g., v4.46.3)'
     required: true
     default: 'v4.46.3'
 
