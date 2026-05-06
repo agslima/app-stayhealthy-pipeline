@@ -1,0 +1,35 @@
+name: Workflow Self-Test
+
+on:
+  schedule:
+    - cron: "0 4 * * 0" # Sundays 04:00 UTC
+  workflow_dispatch: {}
+  pull_request:  # add itself for testing changes to this workflow
+    paths:
+      - '.github/workflows/workflow-selftest.yml'
+permissions:
+      contents: read
+concurrency:
+  group: workflow-selftest-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  actionlint:
+    name: Lint workflows (actionlint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Check workflow files
+        uses: docker://rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 # v1.7.12
+        with:
+          args: -color
+
+  workflow-input-provenance:
+    name: Workflow Input Provenance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install workflow provenance dependencies
+        run: python3 -m pip install 'PyYAML==6.0.3'
+      - name: Check workflow input provenance
+        run: make check-provenance

@@ -52,7 +52,7 @@ establish an auditable baseline for dependency provenance without changing relea
 
 | Control | Owner | Dependencies | Validation method | Rollback path |
 | :--- | :--- | :--- | :--- | :--- |
-| Pilot high-trust workflow input provenance check | Project Maintainers | Python 3 + `PyYAML`; access to `.github/workflows/ci-release-gate.yml` and `.github/workflows/gitops-enforce.yml` | Run `python3 scripts/check-workflow-input-provenance.py`; confirm all third-party action refs are full-SHA pinned and OCI image refs are digest-pinned; regression coverage in `scripts/tests/test_workflow_input_provenance.py` | Remove the standalone script and documentation references if it creates noise or false positives; no workflow rollback is required because enforcement is not yet wired into CI. |
+| Pilot high-trust workflow input provenance check | Project Maintainers | Python 3 + `PyYAML`; access to `.github/workflows/ci-release-gate.yml` and `.github/workflows/gitops-enforce.yml` | Run `make checke-provenance` or `python3 scripts/check-workflow-input-provenance.py`; PR validation also runs the check for governance changes; confirm all third-party action refs are full-SHA pinned and OCI image refs are digest-pinned; regression coverage in `scripts/tests/test_workflow_input_provenance.py` | Remove the Makefile and CI wiring if the check creates unacceptable contributor friction or false positives; preserve the standalone script until the control is formally retired. |
 | Record approved exceptions for mutable installer sources | Project Maintainers with Security Reviewer sign-off | Pilot output; review of installer URLs used by release workflows | Manual review captured in `docs/trusted-workflow-input-inventory.md` and quarterly governance review | Revert the exception inventory entries and keep the current documented posture if the exception model is too coarse. |
 
 ### Phase 1: 30 to 60 days
@@ -62,7 +62,7 @@ turn the pilot baseline into a governed dependency-provenance control and reduce
 
 | Control | Owner | Dependencies | Validation method | Rollback path |
 | :--- | :--- | :--- | :--- | :--- |
-| Promote the workflow provenance check into `make governance-checks` and PR validation after two green pilot cycles | Project Maintainers | Stable pilot output; no unresolved false positives; maintainer approval | Local `make workflow-input-provenance-check`; PR validation now runs it as a non-blocking dry run before any required-check rollout | Remove the make/CI wiring and revert to standalone execution if contributor friction or false positives exceed the pilot thresholds. |
+| Promote the workflow provenance check into `make governance-checks` and PR validation after two green pilot cycles | Project Maintainers | Stable pilot output; no unresolved false positives; maintainer approval | Local `make checke-provenance`; PR validation runs it for governance changes before any broader required-check rollout | Remove the Makefile/CI wiring and revert to standalone execution if contributor friction or false positives exceed the pilot thresholds. |
 | Mirror or otherwise govern mutable installer downloads used in trusted workflows | Project Maintainers | Approved exception inventory; mirror location or checksum strategy | Validate mirrored source references and successful release dry run | Restore the previous installer path if mirror availability causes failed releases; document the exception and incident in governance evidence. |
 
 ### Phase 2: 60 to 90 days
