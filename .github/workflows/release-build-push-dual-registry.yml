@@ -140,16 +140,20 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Generate Secure .npmrc
+        env:
+          GAR_TOKEN: ${{ needs.generate-auth-token.outputs.gar_token }}
         run: |
-          cat <<EOF > .npmrc.build
+          set -euo pipefail
+          umask 077
+          cat > "${RUNNER_TEMP}/.npmrc.build" <<EOF
           registry=https://${GAR_LOCATION}-npm.pkg.dev/${GCP_PROJECT_ID}/${NPM_VIRTUAL_REPO}/
-          //${GAR_LOCATION}-npm.pkg.dev/${GCP_PROJECT_ID}/${NPM_VIRTUAL_REPO}/:_authToken=${{ needs.generate-auth-token.outputs.gar_token }}
+          //${GAR_LOCATION}-npm.pkg.dev/${GCP_PROJECT_ID}/${NPM_VIRTUAL_REPO}/:_authToken=${GAR_TOKEN}
           //${GAR_LOCATION}-npm.pkg.dev/${GCP_PROJECT_ID}/${NPM_VIRTUAL_REPO}/:always-auth=true
           EOF
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v2.5.0
         with:
-          # This forces the use of an isolated container for the build environment
+          # Forces the use of an isolated container for the build environment
           driver: docker-container
       - name: Login to Docker Hub
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v2.1.0
@@ -198,7 +202,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           secret-files: |
-            npmrc=.npmrc.build
+            npmrc=${{ runner.temp }}/.npmrc.build
           build-args: |
             GIT_TAG=${{ env.RELEASE_TAG }}
             GIT_COMMIT=${{ env.GITHUB_SHA }}
@@ -206,7 +210,7 @@ jobs:
             GIT_TREE_STATE=${{ env.GIT_TREE_STATE }}
       - name: Clean up .npmrc
         if: always()
-        run: rm -f .npmrc.build
+        run: rm -f "${RUNNER_TEMP}/.npmrc.build"
       - name: Export Digest Artifact
         run: |
           set -euo pipefail
@@ -245,7 +249,7 @@ jobs:
         with:
           egress-policy: audit
       - name: Install Cosign
-        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v2.1.0
+        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
       - name: Login to Docker Hub
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v2.1.0
         with:
