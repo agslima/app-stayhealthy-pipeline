@@ -23,6 +23,10 @@ jobs:
       contents: read
     outputs:
       release_run_id: ${{ steps.source-validation.outputs.release_run_id }}
+      run_id: ${{ steps.release-meta.outputs.run_id }}
+      release_sha: ${{ steps.release-meta.outputs.release_sha }}
+      release_ref: ${{ steps.release-meta.outputs.release_ref }}
+      release_tag: ${{ steps.release-meta.outputs.release_tag }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -32,10 +36,109 @@ jobs:
         uses: ./.github/actions/validate-promotion
         with:
           run_id: ${{ github.event.inputs.run_id }} # Only populated on workflow_dispatch
+      - name: Provision Token File
+        shell: bash
+        env:
+          SECRETS: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TOKEN_PATH="${RUNNER_TEMP}/github_token.txt"
+          touch "$TOKEN_PATH"
+          chmod 600 "$TOKEN_PATH"
+          echo "${SECRETS}" > "$TOKEN_PATH"
+      
+      - name: Resolve Release Run Metadata
+        id: release-meta
+        uses: ./.github/actions/resolve-run-metadata
+        with:
+          run-id: ${{ steps.source-validation.outputs.release_run_id }}
+          github-token-file: ${{ runner.temp }}/github_token.txt
+          expected-workflow-name: 'Release'
+      - name: Cleanup Token File
+        if: always()
+        shell: bash
+        run: rm -f "${RUNNER_TEMP}/github_token.txt"
+
+  images-verification:
+    runs-on: ubuntu-latest
+    needs: [verify-context]
+    if: ${{ needs.verify-context.result == 'success' }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    env:      
+      TRIVY_WORKFLOW_PATH: ".github/workflows/release-trivy.yml"      
+      ZAP_WORKFLOW_PATH: ".github/workflows/release-dast.yml"
+      BUILD_WORKFLOW_PATH: ".github/workflows/release-build-push-dual-registry.yml"
+      RUN_ID: ${{ needs.verify-context.outputs.run_id }}
+      TAG: ${{ needs.verify-context.outputs.release_tag }}
+      REF: ${{ needs.verify-context.outputs.release_ref }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: backend
+            image_repo: app-stayhealthy-backend
+          - service: worker
+            image_repo: app-stayhealthy-worker
+          - service: frontend
+            image_repo: app-stayhealthy-frontend
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.1
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
+      - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 #v4.1.0
+        with:
+          username: ${{ vars.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Install SLSA-Verifier
+        uses: slsa-framework/slsa-verifier/actions/installer@ea584f4502babc6f60d9bc799dbbb13c1caa9ee6 # v2.7.1
+    
+      - name: Download Digests from Release Workflow
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          run-id: ${{ env.RUN_ID }}
+          merge-multiple: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: digest-*
+          path: digests
+      - name: Read & Validate Digest
+        env:
+          DOCKER_USERNAME: ${{ vars.DOCKER_HUB_USERNAME }}
+        run: |
+          set -euo pipefail
+          FILE="digests/digest-${{ matrix.image_repo }}"
+          if [ ! -s "$FILE" ]; then
+            echo "::error::Digest file missing or empty for ${{ matrix.service }} ($FILE)"
+            exit 1
+          fi
+          DIGEST=$(cat "$FILE")
+          if ! echo "$DIGEST" | grep -Eq '^sha256:[a-f0-9]{64}$'; then
+            echo "::error::Invalid digest format for ${{ matrix.service }}: ${DIGEST}"
+            exit 1
+          fi
+          echo "CURRENT_IMAGE=docker.io/${DOCKER_USERNAME}/${{ matrix.image_repo }}@${DIGEST}" >> "$GITHUB_ENV"
+          echo "✅ Loaded and validated digest successfully." 
+      - name: Verify Signatures (${{ matrix.service }})
+        uses: ./.github/actions/verify-attestations
+        with:
+          image: ${{ env.CURRENT_IMAGE }}
+          release-ref: ${{ env.REF }}
+          release-tag: ${{ env.TAG }}
+          build-workflow-path: ${{ env.BUILD_WORKFLOW_PATH }}
+          trivy-workflow-path: ${{ env.TRIVY_WORKFLOW_PATH }}
+          zap-workflow-path: ${{ env.ZAP_WORKFLOW_PATH }}
 
   gitops:
     runs-on: ubuntu-latest
-    needs: [verify-context]
+    needs: [images-verification, verify-context]
     if: ${{ needs.verify-context.result == 'success' }}
     environment: production
     permissions:
@@ -47,6 +150,10 @@ jobs:
       ZAP_PREDICATE_TYPE: "https://security.sigstore.dev/attestations/dast/zap/v1"
       SBOM_PREDICATE_TYPE: "https://spdx.dev/Document"
       SLSA_PREDICATE_TYPE: "https://slsa.dev/provenance/v1"      
+      SHA: ${{ needs.verify-context.outputs.release_sha }}
+      RUN_ID: ${{ needs.verify-context.outputs.run_id }}
+      TAG: ${{ needs.verify-context.outputs.release_tag }}
+      REF: ${{ needs.verify-context.outputs.release_ref }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
@@ -69,39 +176,12 @@ jobs:
         uses: imranismail/setup-kustomize@53f941b41dca13ed61874bbc6b4b6e1562877530 # v3.0.0
       - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 #v4.1.0
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          username: ${{ vars.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Install SLSA-Verifier
-        uses: slsa-framework/slsa-verifier/actions/installer@ea584f4502babc6f60d9bc799dbbb13c1caa9ee6 # v2.7.1
-      - name: Provision Token File
-        shell: bash
-        env:
-          SECRETS: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TOKEN_PATH="${RUNNER_TEMP}/github_token.txt"
-          touch "$TOKEN_PATH"
-          chmod 600 "$TOKEN_PATH"
-          echo "${SECRETS}" > "$TOKEN_PATH"
-      - name: Resolve Release Run Metadata
-        id: release-meta
-        uses: ./.github/actions/resolve-run-metadata
-        with:
-          run-id: ${{ needs.verify-context.outputs.release_run_id }}
-          github-token-file: ${{ runner.temp }}/github_token.txt
-          expected-workflow-name: 'Release'
-      - name: Cleanup Token File
-        if: always()
-        shell: bash
-        run: rm -f "${RUNNER_TEMP}/github_token.txt"
-      - name: Print Validated Data
-        run: |
-          echo "Ref: ${{ steps.release-meta.outputs.release_ref }}"
-          echo "Tag: ${{ steps.release-meta.outputs.release_tag }}"
-          echo "SHA: ${{ steps.release-meta.outputs.release_sha }}"
       - name: Download Digests from Release Workflow
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          run-id: ${{ steps.release-meta.outputs.run_id }}
+          run-id: ${{ env.RUN_ID }}
           merge-multiple: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
           pattern: digest-*
@@ -176,13 +256,14 @@ jobs:
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 #v8.1.1 
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: ":robot: deploy promote ${{ steps.release-meta.outputs.release_sha }}"
-          title: ":robot: deploy release (${{ steps.release-meta.outputs.release_sha }})"
+          commit-message: ":robot: deploy promote ${{ env.SHA }}"
+          title: ":robot: deploy release (${{ env.SHA }})"
           body: |
             Automated GitOps promotion from a successful Release workflow run.
             **Source**
-            - Release Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ steps.release-meta.outputs.run_id }}
-            - Head SHA: `${{ steps.release-meta.outputs.release_sha }}`
+            - Release Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ env.RUN_ID }}
+            - Head SHA: `${{ env.SHA }}`
+            - Release Tag: `${{ env.TAG }}`
             - Backend candidate canary: `${{ env.BACKEND_IMAGE }}`
             - Worker: `${{ env.WORKER_IMAGE }}`
             - Frontend: `${{ env.FRONTEND_IMAGE }}`
@@ -196,7 +277,7 @@ jobs:
             - SBOM attestation: ✅ (`${{ env.SBOM_PREDICATE_TYPE }}`)
             - SLSA provenance: ✅ (`${{ env.SLSA_PREDICATE_TYPE }}`)
             - Kyverno structural checks: ✅
-          branch: gitops/deploy-${{ steps.release-meta.outputs.release_sha }}
+          branch: gitops/deploy-${{ env.SHA }}
           base: main
           author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
           signoff: true
