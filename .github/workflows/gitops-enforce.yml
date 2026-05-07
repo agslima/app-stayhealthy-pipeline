@@ -139,7 +139,6 @@ jobs:
   gitops:
     runs-on: ubuntu-latest
     needs: [images-verification, verify-context]
-    if: ${{ needs.verify-context.result == 'success' }}
     environment: production
     permissions:
       contents: write
