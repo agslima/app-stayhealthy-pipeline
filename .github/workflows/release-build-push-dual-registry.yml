@@ -54,22 +54,6 @@ on:
         description: 'Docker Hub username'
         required: true
         type: string
-      gcp_project_id:
-        description: 'GCP Project ID for Artifact Registry'
-        required: true
-        type: string
-      gcp_project_number:
-        description: 'GCP Project Number for Workload Identity'
-        required: true
-        type: string
-      gar_location:
-        description: 'GCP region for Artifact Registry'
-        required: true
-        type: string
-      npm_virtual_repo:
-        description: 'Artifact Registry NPM virtual repository name'
-        required: true
-        type: string
     outputs:
       image-digest:
         description: "sha256 digest of container image"
@@ -277,9 +261,4 @@ jobs:
           subject-name: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_REPO }}
           subject-digest: ${{ env.DIGEST }}
           push-to-registry: true
-      - name: Upload SBOM Artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.3.0
-        with:
-          name: sbom-${{ env.IMAGE_REPO }}
-          path: sbom-${{ env.IMAGE_REPO }}.spdx.json
-          retention-days: 30
+          
