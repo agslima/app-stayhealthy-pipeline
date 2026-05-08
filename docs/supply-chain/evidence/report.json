@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.1",
+  "image_name": "app-stayhealthy-backend",
+  "status": "mismatch",
+  "comparison_basis": "oci_manifest_digest",
+  "comparison": {
+    "manifest_digest_match": false,
+    "config_digest_match": false,
+    "layer_count_match": true,
+    "layer_digests_match": false,
+    "layer_diffs": [
+      {
+        "index": 5,
+        "first": "sha256:311d2326a5fa9c598d72fb7ee96417199bf47ee8b5454436e59212e44a186a9d",
+        "second": "sha256:fab3d8ab751d3696d4085e9ad23af17078a4505536a261e66cd27fcfa9115a40"
+      },
+      {
+        "index": 6,
+        "first": "sha256:53a7139130e3c513fa9a8226782735ee2889fef95b7a17d434bd13a37900642b",
+        "second": "sha256:c9b198057eb9127c1450213ffce03190104f4e8adf3d398a63fe9ff773665644"
+      },
+      {
+        "index": 7,
+        "first": "sha256:243590b85f95260b6ea6862c531f4da0ce6afd5d702875e84f011fe2e59b0e72",
+        "second": "sha256:7ab648950e4b33586d67c416e95e9010a65b38e4b7fe7423b578087cbac931e8"
+      }
+    ],
+    "config_field_diffs": [
+      {
+        "path": "rootfs.diff_ids[5]",
+        "first": "sha256:1e9bdcc78e411498115ff284b206caf0a6f0b7a31cbf46c34df9eda10a3952a5",
+        "second": "sha256:200fc841a41499e7c780dc55da1a925f206e176bf971f1182d6b192609127765"
+      },
+      {
+        "path": "rootfs.diff_ids[6]",
+        "first": "sha256:f77b6f88c60c36e4b8f0f5bd3e4d30da045664612cdde993b4eec32bc0911f4c",
+        "second": "sha256:e84bf2325827da1532f04e65714a6bd7016952ddb4944191902a586b9c389e7f"
+      },
+      {
+        "path": "rootfs.diff_ids[7]",
+        "first": "sha256:9cbe9294db66297e186eab9f10c3b4084716d416f9b0c4e31ebeb164610331be",
+        "second": "sha256:95eb64db567a35e7e02a3a01f0af9bfa2d34d881b0a43b3c26379b7dfc5865d7"
+      }
+    ]
+  },
+  "runs": [
+    {
+      "name": "first",
+      "archive": "/home/runner/work/app-stayhealthy-pipeline/app-stayhealthy-pipeline/artifacts/reproducibility-pilot/backend-run-1.oci.tar",
+      "archive_sha256": "072e8df520188cff8d028a67d681a1b3a3b535282d63bbf14604e5397d776cb1",
+      "manifest_digest": "sha256:012c758f27c38927e2899edffb7a881dc89371c8d5a37cece0a422727593150c",
+      "config_digest": "sha256:159ac719dc1d23b9107a47ea0627497cca4efc6d89e3d053a7dd82084177eca5",
+      "layer_count": 9,
+      "layer_digests": [
+        "sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb",
+        "sha256:1c3a93350d1ddce38950572eeddc8d6c10cc2a8048351dd36bdff163fe3e94dd",
+        "sha256:8144736fd000e7074453fec2a316cd660971719d46f58e20e3f896599ed8cb8a",
+        "sha256:64aa1333f5a06af6c594eff30c965b0f06d98a42c802d5739c3f8ec4c97711d2",
+        "sha256:b67246d5d21a1e5208d87db10a035e60592ce32fc1bd322536cd6248ad3f3ea1",
+        "sha256:311d2326a5fa9c598d72fb7ee96417199bf47ee8b5454436e59212e44a186a9d",
+        "sha256:53a7139130e3c513fa9a8226782735ee2889fef95b7a17d434bd13a37900642b",
+        "sha256:243590b85f95260b6ea6862c531f4da0ce6afd5d702875e84f011fe2e59b0e72",
+        "sha256:326637f13e4affa132f576ce0704066b74c5ebf60d2ad7da61283912d2027186"
+      ],
+      "platform": "linux/amd64",
+      "ref_name": ""
+    },
+    {
+      "name": "second",
+      "archive": "/home/runner/work/app-stayhealthy-pipeline/app-stayhealthy-pipeline/artifacts/reproducibility-pilot/backend-run-2.oci.tar",
+      "archive_sha256": "d5b7713e034561f6dc63e5f3632e753dd2c8342663e0ba0d5f4fd6b109e53e57",
+      "manifest_digest": "sha256:de35a4c77689d219eadbd2be97782f38097875b99d73cafbfee7ce0ad31ea555",
+      "config_digest": "sha256:04ef9c4200aa575542b3c5e0bd188a5323526434420d125257b290e8ab4ec323",
+      "layer_count": 9,
+      "layer_digests": [
+        "sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb",
+        "sha256:1c3a93350d1ddce38950572eeddc8d6c10cc2a8048351dd36bdff163fe3e94dd",
+        "sha256:8144736fd000e7074453fec2a316cd660971719d46f58e20e3f896599ed8cb8a",
+        "sha256:64aa1333f5a06af6c594eff30c965b0f06d98a42c802d5739c3f8ec4c97711d2",
+        "sha256:b67246d5d21a1e5208d87db10a035e60592ce32fc1bd322536cd6248ad3f3ea1",
+        "sha256:fab3d8ab751d3696d4085e9ad23af17078a4505536a261e66cd27fcfa9115a40",
+        "sha256:c9b198057eb9127c1450213ffce03190104f4e8adf3d398a63fe9ff773665644",
+        "sha256:7ab648950e4b33586d67c416e95e9010a65b38e4b7fe7423b578087cbac931e8",
+        "sha256:326637f13e4affa132f576ce0704066b74c5ebf60d2ad7da61283912d2027186"
+      ],
+      "platform": "linux/amd64",
+      "ref_name": ""
+    }
+  ]
+}

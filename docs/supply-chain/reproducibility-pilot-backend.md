@@ -33,7 +33,7 @@ The workflow job:
    - `VERSION=<release tag>`
    - `SOURCE=https://github.com/<repo>`
 4. disables provenance and SBOM emission for the pilot build itself so the comparison focuses on the image output
-5. generates `report.json` and `summary.md` using `scripts/report-reproducibility-pilot.py --allow-mismatch`
+5. generates `report.json` and `summary.md` using `scripts/supply-chain/report-reproducibility-pilot.py --allow-mismatch`
 6. uploads artifact `reproducibility-pilot-backend`
 
 ## Success, Failure, and Rollback Criteria
@@ -72,6 +72,7 @@ Expected artifact:
 - config digest match or mismatch
 - layer count match or mismatch
 - per-layer digest differences
+- per-file metadata and content differences for changed layer blobs when available
 - config JSON field differences
 
 Interpretation:
