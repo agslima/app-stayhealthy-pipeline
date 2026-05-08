@@ -28,6 +28,7 @@ The workflow job:
 2. builds the backend image twice with `docker buildx build`
 3. normalizes metadata-oriented build args:
    - `BUILD_DATE=1970-01-01T00:00:00Z`
+   - `SOURCE_DATE_EPOCH=0`
    - `VCS_REF=<release sha>`
    - `VERSION=<release tag>`
    - `SOURCE=https://github.com/<repo>`
