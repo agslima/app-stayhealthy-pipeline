@@ -56,15 +56,14 @@ jobs:
     uses: ./.github/workflows/ci-security-deep.yml
 
   build-push-backend:
-    if: false # Disabled until we have a stable release to test with.
     name: Build & Push
     needs: [resolve, run-trivy]
     permissions:
-      contents: read
-      packages: write
-      id-token: write
-      attestations: write
-      actions: read
+      contents: read 
+      packages: write          # Needed to push images to `ghcr.io` and create release assets.
+      id-token: write          # Needed to create an OIDC token for keyless signing
+      attestations: write      # Needed to upload attestations to the GitHub registry
+      actions: read            # Needed for workflow context resolution in the provenance generation step.
       artifact-metadata: write # Needed to upload SBOM as artifact
     uses: ./.github/workflows/release-build-push-dual-registry.yml
     with:
@@ -83,7 +82,7 @@ jobs:
 
   reproducibility-pilot-backend:
     name: Reproducibility Pilot (Backend)
-    needs: [resolve ] # , build-push-backend]
+    needs: [resolve, build-push-backend]
     runs-on: ubuntu-latest
     continue-on-error: true
     timeout-minutes: 25
@@ -149,8 +148,7 @@ jobs:
           path: artifacts/reproducibility-pilot/
           retention-days: 30
                     
-  build-push-frontend:
-    if: false # Disabled until we have a stable release to test with.
+  build-push-frontend:    
     name: Build & Push
     needs: [resolve, run-trivy]
     permissions:
@@ -175,8 +173,7 @@ jobs:
       dockerhub_token: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       ghcr_token: ${{ secrets.GITHUB_TOKEN }}
 
-  build-push-worker:
-    if: false # Disabled until we have a stable release to test with.
+  build-push-worker:    
     name: Build & Push
     needs: [resolve, run-trivy]
     permissions:
@@ -201,8 +198,7 @@ jobs:
       dockerhub_token: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       ghcr_token: ${{ secrets.GITHUB_TOKEN }}
   
-  generate-slsa-provenance-backend-ghcr:
-    if: false # Disabled until we have a stable release to test with.
+  generate-slsa-provenance-backend-ghcr:    
     needs: [build-push-backend]
     permissions:
       id-token: write   # To sign the provenance.
@@ -216,8 +212,7 @@ jobs:
     secrets:
       registry-password: ${{ secrets.GITHUB_TOKEN }}
 
-  generate-slsa-provenance-frontend-ghcr:
-    if: false # Disabled until we have a stable release to test with.
+  generate-slsa-provenance-frontend-ghcr:    
     needs: [build-push-frontend]
     permissions:
       id-token: write   # To sign the provenance.
@@ -231,8 +226,7 @@ jobs:
     secrets:
       registry-password: ${{ secrets.GITHUB_TOKEN }}
   
-  generate-slsa-provenance-worker-ghcr:
-    if: false # Disabled until we have a stable release to test with.
+  generate-slsa-provenance-worker-ghcr:    
     needs: [build-push-worker]
     permissions:
       id-token: write   # To sign the provenance.
@@ -246,8 +240,7 @@ jobs:
     secrets:
       registry-password: ${{ secrets.GITHUB_TOKEN }}
       
-  generate-slsa-provenance-backend-docker:
-    if: false # Disabled until we have a stable release to test with.
+  generate-slsa-provenance-backend-docker:    
     needs: [build-push-backend]
     permissions:
       id-token: write   # To sign the provenance.
@@ -262,8 +255,6 @@ jobs:
       registry-password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
   generate-slsa-provenance-frontend-docker:
-    if: false # Disabled until we have a stable release to test with.
-
     needs: [build-push-frontend]
     permissions:
       id-token: write   # To sign the provenance.
@@ -277,8 +268,7 @@ jobs:
     secrets:
       registry-password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
   
-  generate-slsa-provenance-worker-docker:
-    if: false # Disabled until we have a stable release to test with.
+  generate-slsa-provenance-worker-docker:    
     needs: [build-push-worker]
     permissions:
       id-token: write   # To sign the provenance.
@@ -292,8 +282,7 @@ jobs:
     secrets:
       registry-password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
   
-  trivy-scan:
-    if: false # Disabled until we have a stable release to test with.
+  trivy-scan:    
     name: Trivy Scan (Digest Gate)
     needs: [ build-push-frontend, build-push-backend, build-push-worker, generate-slsa-provenance-backend-docker, generate-slsa-provenance-frontend-docker, generate-slsa-provenance-worker-docker ]
     permissions:
@@ -313,14 +302,13 @@ jobs:
       ghcr_token: ${{ secrets.GITHUB_TOKEN }}
      
   dast-analysis:
-    if: false # Disabled until we have a stable release to test with.
     name: DAST (Digest-based)
     needs: [ build-push-frontend, build-push-backend, build-push-worker, resolve, generate-slsa-provenance-backend-docker, generate-slsa-provenance-frontend-docker, generate-slsa-provenance-worker-docker ]
     permissions:
       contents: read
-      id-token: write
-      packages: write # Used to pull images from `ghcr.io` if used.
-      attestations: write
+      id-token: write     # Needed to create an OIDC token for keyless signing of the provenance.
+      packages: write     # Used to pull images from `ghcr.io` if used.
+      attestations: write # Needed to upload attestations to the GitHub registry
     uses: ./.github/workflows/release-dast.yml
     with:
       release_tag: ${{ needs.resolve.outputs.release_tag }}

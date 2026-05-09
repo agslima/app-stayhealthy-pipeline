@@ -56,7 +56,6 @@ allowed_base_for_any_stage(img) if { is_node(img) }
 allowed_base_for_any_stage(img) if { is_nginx_unprivileged(img) }
 
 # Release mode toggle:
-# IMPORTANT: you cannot set input.release because input is the Dockerfile AST.
 # Use data params instead (see notes below).
 release_mode_enabled if {
   data.params.release == true
