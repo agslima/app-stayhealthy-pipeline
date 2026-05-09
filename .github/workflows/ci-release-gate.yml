@@ -113,6 +113,7 @@ jobs:
 
           build_once() {
             local output_file="$1"
+            export SOURCE_DATE_EPOCH=0
             docker buildx build \
               --platform linux/amd64 \
               --file app/docker/Dockerfile.server \
@@ -121,7 +122,6 @@ jobs:
               --provenance=false \
               --sbom=false \
               --build-arg BUILD_DATE=1970-01-01T00:00:00Z \
-              --build-arg SOURCE_DATE_EPOCH=0 \
               --build-arg VCS_REF="${GITHUB_SHA}" \
               --build-arg VERSION="${RELEASE_TAG}" \
               --build-arg SOURCE="${SOURCE_URL}" \
