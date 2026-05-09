@@ -111,5 +111,6 @@ Initial investigation focus:
 Follow-up remediation started:
 
 - `app/docker/Dockerfile.server` no longer runs broad `apk upgrade` during dependency or runtime image builds.
-- Runtime installation of `tini` is pinned to `tini=0.19.0-r3`.
+- Runtime installation of `tini` no longer uses `apk add`; it downloads upstream `tini-static-amd64` for `v0.19.0`, verifies SHA-256 `c5b0666b4cb676901f90dfcb37106783c5fe2077b04590973b885950611b30ee`, and normalizes the binary mtime.
+- Runtime NPM removal no longer invokes `npm uninstall`; the image removes known global NPM paths directly to avoid logs, update-notifier state, and Node compile-cache churn.
 - OS patch uptake should be handled through reviewed updates to the digest-pinned `node:25.9.0-alpine` base image, with scanner evidence and PR review, rather than implicit package upgrades during each application build.
