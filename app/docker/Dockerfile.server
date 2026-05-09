@@ -1,19 +1,31 @@
 # ==========================================
 # STAGE 1: Dependencies (prod only)
 # ==========================================
-
 FROM node:25.9.0-alpine@sha256:bdf2cca6fe3dabd014ea60163eca3f0f7015fbd5c7ee1b0e9ccb4ced6eb02ef4 AS deps
 
 WORKDIR /app
 
 COPY server/package*.json ./
 
-# Normalize node_modules mtimes to ensure deterministic layer hashes
-RUN npm ci --omit=dev --ignore-scripts \
-    && find node_modules -exec touch -h -d @0 {} +
+RUN npm ci --omit=dev --ignore-scripts
 
 # ==========================================
-# STAGE 2: Runtime
+# STAGE 2: Assembler (The Reproducibility Fix)
+# ==========================================
+FROM node:25.9.0-alpine@sha256:bdf2cca6fe3dabd014ea60163eca3f0f7015fbd5c7ee1b0e9ccb4ced6eb02ef4 AS assembler
+
+WORKDIR /staging/app
+
+# Gather dependencies and source code into the staging area
+COPY --from=deps /app/node_modules ./node_modules
+COPY server ./
+
+# Normalize ALL files, subdirectories, AND the /staging/app parent directory
+RUN find . -exec touch -h -d @0 {} + \
+    && touch -h -d @0 /staging/app
+
+# ==========================================
+# STAGE 3: Runtime
 # ==========================================
 FROM node:25.9.0-alpine@sha256:bdf2cca6fe3dabd014ea60163eca3f0f7015fbd5c7ee1b0e9ccb4ced6eb02ef4 AS runtime
 
@@ -31,36 +43,29 @@ LABEL org.opencontainers.image.title="stayhealthy-backend" \
       org.opencontainers.image.version=$VERSION \
       org.opencontainers.image.source=$SOURCE
 
-WORKDIR /app
-
+# 1. Normalize the root directories altered by Tini and NPM removal
 RUN wget -q -O /sbin/tini "https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-static-amd64" \
     && printf "%s  /sbin/tini\n" "${TINI_STATIC_AMD64_SHA256}" > /tmp/tini.sha256 \
     && sha256sum -c /tmp/tini.sha256 \
     && rm -f /tmp/tini.sha256 \
     && chmod 0755 /sbin/tini \
-    && touch -h -d @0 /sbin/tini /sbin
-
-# Remove NPM to reduce attack surface and normalize altered directories
-RUN rm -rf /usr/local/lib/node_modules/npm \
-    /usr/local/bin/npm \
-    /usr/local/bin/npx \
-    /root/.npm \
-    /tmp/node-compile-cache \
-    && touch -h -d @0 /usr/local/bin /usr/local/lib/node_modules /usr/local/lib /root /tmp
+    && rm -rf /usr/local/lib/node_modules/npm \
+       /usr/local/bin/npm \
+       /usr/local/bin/npx \
+       /root/.npm \
+       /tmp/node-compile-cache \
+    && touch -h -d @0 /sbin/tini /sbin /usr/local/bin /usr/local/lib/node_modules /usr/local/lib /root /tmp
 
 ENV NODE_ENV=production
 
-# Ownership for non-root user
-COPY --from=deps --chown=node:node /app/node_modules ./node_modules
-COPY --chown=node:node server ./
+# 2. Single COPY from the assembler stage. 
+# This preserves the @0 timestamps for both the files and the /app directory itself.
+COPY --from=assembler --chown=node:node /staging/app /app
 
-# Normalize the working directory after copies to ensure layer determinism
-RUN touch -h -d @0 /app
+WORKDIR /app
 
-# Switch to non-root user (UID 1000)
 USER node
 
-# Add Healthcheck
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD wget -q --spider http://localhost:8080/health || exit 1
 
