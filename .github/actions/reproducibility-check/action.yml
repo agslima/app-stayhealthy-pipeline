@@ -1,0 +1,114 @@
+name: 'Reproducibility Build Check'
+description: 'Runs a deterministic double-build to verify OCI manifest reproducibility.'
+author: 'PE'
+
+inputs:
+  image-name:
+    description: 'Target name for the image (e.g., app-stayhealthy-backend)'
+    required: true
+  dockerfile-path:
+    description: 'Path to the Dockerfile'
+    required: true
+    default: 'Dockerfile'
+  build-context:
+    description: 'Path to the build context'
+    required: true
+    default: '.'
+  release-tag:
+    description: 'Release tag to inject as VERSION'
+    required: true
+  source-url:
+    description: 'Repository URL for provenance'
+    required: true
+  report-script-path:
+    description: 'Path to the Python reproducibility report script'
+    required: true
+    default: 'scripts/supply-chain/report-reproducibility-pilot.py'
+  allow-mismatch:
+    description: 'Set to "true" for a soft-gate pilot, "false" to fail the build on digest mismatch'
+    required: false
+    default: 'true'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Calculate Deterministic Timestamps
+      id: timestamps
+      shell: bash
+      run: |
+        # Extract the Git commit timestamp for SOURCE_DATE_EPOCH
+        COMMIT_TIMESTAMP=$(git log -1 --format=%ct ${{ github.sha }})
+        echo "SOURCE_DATE_EPOCH=$COMMIT_TIMESTAMP" >> $GITHUB_ENV
+        
+        # Format the timestamp for BUILD_DATE in ISO 8601 format
+        BUILD_DATE_ISO=$(date -u -d @"$COMMIT_TIMESTAMP" +'%Y-%m-%dT%H:%M:%SZ')
+        echo "BUILD_DATE_ISO=$BUILD_DATE_ISO" >> $GITHUB_ENV
+
+    - name: Run reproducible builds
+      shell: bash
+      env:
+        IMAGE_NAME: ${{ inputs.image-name }}
+        DOCKERFILE_PATH: ${{ inputs.dockerfile-path }}
+        BUILD_CONTEXT: ${{ inputs.build-context }}
+        RELEASE_TAG: ${{ inputs.release-tag }}
+        SOURCE_URL: ${{ inputs.source-url }}
+      run: |
+        set -euo pipefail
+        
+        # Isolate artifacts per image to prevent collisions in matrix builds
+        ARTIFACT_DIR="artifacts/repro-${IMAGE_NAME}"
+        mkdir -p "${ARTIFACT_DIR}"
+
+        build_once() {
+          local output_file="$1"
+          # SOURCE_DATE_EPOCH is implicitly picked up from $GITHUB_ENV
+          docker buildx build \
+            --platform linux/amd64 \
+            --file "${DOCKERFILE_PATH}" \
+            --pull \
+            --no-cache \
+            --provenance=false \
+            --sbom=false \
+            --build-arg BUILD_DATE="${BUILD_DATE_ISO}" \
+            --build-arg VCS_REF="${GITHUB_SHA}" \
+            --build-arg VERSION="${RELEASE_TAG}" \
+            --build-arg SOURCE="${SOURCE_URL}" \
+            --output "type=oci,dest=${output_file},rewrite-timestamp=true" \
+            "${BUILD_CONTEXT}"
+        }
+
+        echo "Executing Build 1..."
+        build_once "${ARTIFACT_DIR}/run-1.oci.tar"
+        
+        echo "Executing Build 2..."
+        build_once "${ARTIFACT_DIR}/run-2.oci.tar"
+
+    - name: Compare OCI outputs
+      shell: bash
+      env:
+        IMAGE_NAME: ${{ inputs.image-name }}
+        MISMATCHED: ${{ inputs.allow-mismatch }}
+        REPORT_SCRIPT_PATH: ${{ inputs.report-script-path }}
+      run: |
+        ARTIFACT_DIR="artifacts/repro-${IMAGE_NAME}"
+        
+        # Conditionally apply the mismatch flag
+        MISMATCH_FLAG=""
+        if [ "${MISMATCHED}" == "true" ]; then
+          MISMATCH_FLAG="--allow-mismatch"
+        fi
+
+        python3 "${REPORT_SCRIPT_PATH}" \
+          --image-name "${IMAGE_NAME}" \
+          --first-archive "${ARTIFACT_DIR}/run-1.oci.tar" \
+          --second-archive "${ARTIFACT_DIR}/run-2.oci.tar" \
+          --output-dir "${ARTIFACT_DIR}" \
+          ${MISMATCH_FLAG}
+
+    - name: Upload evidence artifact
+      if: always()
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.x equivalent
+      with:
+        name: reproducibility-evidence-${{ inputs.image-name }}
+        path: artifacts/repro-${{ inputs.image-name }}/
+        retention-days: 30
