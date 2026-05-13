@@ -5,7 +5,7 @@ inputs:
   version:
     description: 'The semantic version of yq to install (e.g. v4.46.3)'
     required: true
-    default: 'v4.46.3'
+    default: 'v4.53.2'
 
 runs:
   using: composite
@@ -14,7 +14,7 @@ runs:
       shell: bash
       env:
         VERSION: ${{ inputs.version }}
-        YQ_SHA256: "PASTE_REAL_SHA256_HERE"
+        YQ_SHA256: "d56bf5c6819e8e696340c312bd70f849dc1678a7cda9c2ad63eebd906371d56b"
       run: |
         set -euo pipefail
 
