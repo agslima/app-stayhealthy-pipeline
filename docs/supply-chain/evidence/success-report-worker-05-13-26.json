@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.2",
+  "image_name": "worker",
+  "status": "pass",
+  "comparison_basis": "oci_manifest_digest",
+  "comparison": {
+    "manifest_digest_match": true,
+    "config_digest_match": true,
+    "layer_count_match": true,
+    "layer_digests_match": true,
+    "layer_diffs": [],
+    "layer_file_diffs": [],
+    "config_field_diffs": []
+  },
+  "runs": [
+    {
+      "name": "first",
+      "archive": "/home/runner/work/app-stayhealthy-pipeline/app-stayhealthy-pipeline/artifacts/repro-worker/run-1.oci.tar",
+      "archive_sha256": "b7d7a9e1e8d753f5bfceb4e4239131f4edf0fc95ef56aece3782920326ff67be",
+      "manifest_digest": "sha256:41c57efce43e7b5dbfe5c31b1548b235fb4d8c7b783866578bcb515ee9bbb0ca",
+      "config_digest": "sha256:1f748bc95099fd23ef975cecf911e8e734d04868864d99b582e356663f255131",
+      "layer_count": 8,
+      "layer_digests": [
+        "sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb",
+        "sha256:d7319775d025f51b0d7ee7f1224231b07f98b38a21909b5a7e2572e083dcb50a",
+        "sha256:3eebacc30b80dca2db4fba20ee2c2562ae69dbbdc307fcee75b49cf859cf63e4",
+        "sha256:1ba15d4bb83a5da0244b0ca03df5cac1a19a914c5b876543cb1065d7fddbc9d5",
+        "sha256:1c9d798beb96e5bf74f0dcdbe5815451eded7ffd2589218bc733054d30236db5",
+        "sha256:6570f1b498ab6aa85f10d9355e791a81050e89bc482808a3decb68049e75f9a6",
+        "sha256:ee3d5a2a9faacf44cb820f28b6957e92ed2054b23e7482b851af8c52210eabca",
+        "sha256:6373968a36b67b18a6bee87b19f5f869f827ac2e697f3dc12f8379efc9fac7e5"
+      ],
+      "platform": "linux/amd64",
+      "ref_name": ""
+    },
+    {
+      "name": "second",
+      "archive": "/home/runner/work/app-stayhealthy-pipeline/app-stayhealthy-pipeline/artifacts/repro-worker/run-2.oci.tar",
+      "archive_sha256": "b7d7a9e1e8d753f5bfceb4e4239131f4edf0fc95ef56aece3782920326ff67be",
+      "manifest_digest": "sha256:41c57efce43e7b5dbfe5c31b1548b235fb4d8c7b783866578bcb515ee9bbb0ca",
+      "config_digest": "sha256:1f748bc95099fd23ef975cecf911e8e734d04868864d99b582e356663f255131",
+      "layer_count": 8,
+      "layer_digests": [
+        "sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb",
+        "sha256:d7319775d025f51b0d7ee7f1224231b07f98b38a21909b5a7e2572e083dcb50a",
+        "sha256:3eebacc30b80dca2db4fba20ee2c2562ae69dbbdc307fcee75b49cf859cf63e4",
+        "sha256:1ba15d4bb83a5da0244b0ca03df5cac1a19a914c5b876543cb1065d7fddbc9d5",
+        "sha256:1c9d798beb96e5bf74f0dcdbe5815451eded7ffd2589218bc733054d30236db5",
+        "sha256:6570f1b498ab6aa85f10d9355e791a81050e89bc482808a3decb68049e75f9a6",
+        "sha256:ee3d5a2a9faacf44cb820f28b6957e92ed2054b23e7482b851af8c52210eabca",
+        "sha256:6373968a36b67b18a6bee87b19f5f869f827ac2e697f3dc12f8379efc9fac7e5"
+      ],
+      "platform": "linux/amd64",
+      "ref_name": ""
+    }
+  ]
+}
