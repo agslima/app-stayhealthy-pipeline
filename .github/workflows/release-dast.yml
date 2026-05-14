@@ -232,8 +232,8 @@ jobs:
         working-directory: app
         run: docker compose down -v --remove-orphans
 
-  sign-and-attest:
-    name: Sign & Attest (Governed)
+  attest-dast:
+    name: Attest DAST Results (Digest-based)
     runs-on: ubuntu-latest
     needs: [ dast-analysis]
     permissions:

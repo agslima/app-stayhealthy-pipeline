@@ -3,9 +3,13 @@ description: 'Downloads yq for Linux amd64 and verifies a pinned SHA-256 before 
 
 inputs:
   version:
-    description: 'The semantic version of yq to install (e.g. v4.46.3)'
+    description: 'The semantic version of yq to install (e.g. v4.53.2). Must match the provided sha256.'
     required: true
     default: 'v4.53.2'
+  sha256:
+    description: 'SHA-256 of the yq_linux_amd64 binary for the requested version.'
+    required: true
+    default: 'd56bf5c6819e8e696340c312bd70f849dc1678a7cda9c2ad63eebd906371d56b'
 
 runs:
   using: composite
@@ -14,7 +18,7 @@ runs:
       shell: bash
       env:
         VERSION: ${{ inputs.version }}
-        YQ_SHA256: "d56bf5c6819e8e696340c312bd70f849dc1678a7cda9c2ad63eebd906371d56b"
+        YQ_SHA256: ${{ inputs.sha256 }}
       run: |
         set -euo pipefail
 

@@ -115,17 +115,16 @@ jobs:
           fi
           echo "✅ Trivy Gate Passed"
           
-  sign-and-attest:
-    name: Sign & Attest
+  attest-trivy-results:
+    name: Attest Trivy Results with Cosign
     timeout-minutes: 10
     if: success()  # Ensure all scans passed
     runs-on: ubuntu-latest
     needs: [ trivy-release-scan ]
     permissions:
       contents: read
-      id-token: write
-      packages: write
-      attestations: write
+      id-token: write # For OIDC auth with Cosign
+      packages: write # For GHCR package metadata updates (optional)
     env:
       DOCKER_USERNAME: ${{ inputs.dockerhub_username }}
       TRIVY_VERSION: v0.70.0 # Needed in the attestation predicate

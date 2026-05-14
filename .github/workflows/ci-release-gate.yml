@@ -7,10 +7,10 @@ on:
   # Used for test
   workflow_dispatch:
     inputs:
-      tag:
-        description: 'Existing tag to build and publish (e.g., v1.2.3)'
-        required: true
-        type: string
+      enable_full_gate:
+        description: 'Enable run-trivy, build/push and downstream scans'
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -48,7 +48,7 @@ jobs:
 
   run-trivy:
     name: Run Trivy
-    if: false
+    if: ${{ inputs.enable_full_gate }}
     needs: [resolve]
     permissions:
       contents: read
@@ -57,36 +57,11 @@ jobs:
       actions: read          # Required for workflow context resolution
     uses: ./.github/workflows/ci-security-deep.yml
 
-  build-push-backend:
-    name: Build & Push
-    if: false
-    needs: [resolve, run-trivy]
-    permissions:
-      contents: read           # Needed to read repository contents.
-      packages: write          # Needed to login and upload attestations to ghcr.io.
-      id-token: write          # Needed to get OIDC token for keyless signing
-      attestations: write      # Needed to upload attestations to the repository.
-      actions: read            # Needed to read workflow info.
-      artifact-metadata: write # Needed to upload SBOM as artifact
-    uses: ./.github/workflows/release-build-push-dual-registry.yml
-    with:
-      environment: production
-      context: app
-      file: app/docker/Dockerfile.server
-      image_repo: app-stayhealthy-backend
-      release_tag: ${{ needs.resolve.outputs.release_tag }}
-      github_sha: ${{ github.sha }}
-      platforms: linux/amd64
-      dockerhub_username: ${{ vars.DOCKER_HUB_USERNAME }}
-      ghcr_username: ${{ github.repository_owner }}
-    secrets:      
-      dockerhub_token: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      ghcr_token: ${{ secrets.GITHUB_TOKEN }}
-      
   reproducibility-pilot-backend:
     name: Reproducibility Check (Backend)
     needs: [resolve]
     runs-on: ubuntu-latest
+    environment: staging
     timeout-minutes: 25
     permissions:
       contents: read
@@ -116,10 +91,35 @@ jobs:
           source-url: 'https://github.com/${{ github.repository }}'
           allow-mismatch: 'true' # Change to 'false' to transition to a hard gate
 
+  build-push-backend:
+    name: Build & Push
+    if: ${{ inputs.enable_full_gate }}
+    needs: [resolve, run-trivy]
+    permissions:
+      contents: read           # Needed to read repository contents.
+      packages: write          # Needed to login and upload attestations to ghcr.io.
+      id-token: write          # Needed to get OIDC token for keyless signing
+      attestations: write      # Needed to upload attestations to the repository.
+      actions: read            # Needed to read workflow info.
+      artifact-metadata: write # Needed to upload SBOM as artifact
+    uses: ./.github/workflows/release-build-push-dual-registry.yml
+    with:
+      environment: production
+      context: app
+      file: app/docker/Dockerfile.server
+      image_repo: app-stayhealthy-backend
+      release_tag: ${{ needs.resolve.outputs.release_tag }}
+      github_sha: ${{ github.sha }}
+      platforms: linux/amd64
+      dockerhub_username: ${{ vars.DOCKER_HUB_USERNAME }}
+      ghcr_username: ${{ github.repository_owner }}
+    secrets:      
+      dockerhub_token: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      ghcr_token: ${{ secrets.GITHUB_TOKEN }}
                     
   build-push-frontend:    
     name: Build & Push
-    if: false
+    if: ${{ inputs.enable_full_gate }}
     needs: [resolve, run-trivy]
     permissions:
       contents: read           # Needed to read repository contents.
@@ -145,7 +145,7 @@ jobs:
 
   build-push-worker:    
     name: Build & Push
-    if: false
+    if: ${{ inputs.enable_full_gate }}
     needs: [resolve, run-trivy]
     permissions:
       contents: read           # Needed to read repository contents.
@@ -169,10 +169,9 @@ jobs:
       dockerhub_token: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       ghcr_token: ${{ secrets.GITHUB_TOKEN }}
   
-
   trivy-scan:    
     name: Trivy Scan (Digest Gate)
-    if: false
+    if: ${{ inputs.enable_full_gate }}
     needs: [ build-push-frontend, build-push-backend, build-push-worker ]
     permissions:
       contents: read
@@ -192,7 +191,7 @@ jobs:
      
   dast-analysis:
     name: DAST (Digest-based)
-    if: false
+    if: ${{ inputs.enable_full_gate }}
     needs: [ build-push-frontend, build-push-backend, build-push-worker, resolve ]
     permissions:
       contents: read

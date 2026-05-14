@@ -255,7 +255,7 @@ jobs:
           echo "Attestation finished: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 
   # ---------------------------------------------------------
-  # JOB 3: Trusted Control Plane (SLSA L3 Provenance)
+  # JOB 3A: Trusted Control Plane (SLSA L3 Provenance)
   # ---------------------------------------------------------
   generate-slsa-provenance-ghcr:
     name: Generate SLSA Provenance (ghcr)
@@ -272,6 +272,9 @@ jobs:
     secrets:
       registry-password: ${{ secrets.ghcr_token }}
 
+  # ---------------------------------------------------------
+  # JOB 3B: Trusted Control Plane (SLSA L3 Provenance)
+  # ---------------------------------------------------------
   generate-slsa-provenance-docker:
     name: Generate SLSA Provenance (docker)
     needs: [build-publish]

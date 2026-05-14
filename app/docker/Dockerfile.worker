@@ -67,8 +67,10 @@ USER node
 # (Node 24+ supports --max-old-space-size-percentage for this purpose)
 ENV NODE_OPTIONS="--max-old-space-size-percentage=80"
 
-# Remove Healthcheck so that Kubernetes can use the one defined in the Deployment spec with appropriate 
-# startupProbe and livenessProbe settings for the worker
+# Add a healthcheck to ensure the worker is running and responsive
+# Check kubernetes liveness probe docs for best practices: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-probes
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget -q --spider http://localhost:8090/health || exit 1
 
 # Expose worker port (worker on 8090)
 EXPOSE 8090

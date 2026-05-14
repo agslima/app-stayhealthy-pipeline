@@ -87,14 +87,16 @@ runs:
       shell: bash
       env:
         IMAGE_NAME: ${{ inputs.image-name }}
-        MISMATCHED: ${{ inputs.allow-mismatch }}
+        ALLOW_MISMATCH: ${{ inputs.allow-mismatch }}
         REPORT_SCRIPT_PATH: ${{ inputs.report-script-path }}
       run: |
+        set -euo pipefail
+
         ARTIFACT_DIR="artifacts/repro-${IMAGE_NAME}"
         
         # Conditionally apply the mismatch flag
         MISMATCH_FLAG=""
-        if [ "${MISMATCHED}" == "true" ]; then
+        if [ "${ALLOW_MISMATCH}" == "true" ]; then
           MISMATCH_FLAG="--allow-mismatch"
         fi
 
@@ -107,7 +109,7 @@ runs:
 
     - name: Upload evidence artifact
       if: always()
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.x equivalent
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v6.0.2
       with:
         name: reproducibility-evidence-${{ inputs.image-name }}
         path: artifacts/repro-${{ inputs.image-name }}/

@@ -73,6 +73,11 @@ ENV NODE_OPTIONS="--max-old-space-size-percentage=80"
 # Expose backend API port (backend on 8080)
 EXPOSE 8080
 
+# Add a healthcheck to ensure the server is running and responsive
+# Check kubernetes liveness probe docs for best practices: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-probes
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget -q --spider http://localhost:8080/health || exit 1
+
 # Entrypoint to start the server with tini for proper signal handling
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "src/server.js"]
