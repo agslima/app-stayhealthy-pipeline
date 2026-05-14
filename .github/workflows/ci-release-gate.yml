@@ -7,8 +7,6 @@ on:
   # Used for test
   workflow_dispatch:
     inputs:
-    workflow_dispatch:
-      inputs:
         tag:
           description: 'Release tag to build (vX.Y.Z)'
           type: string
