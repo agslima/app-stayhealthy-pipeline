@@ -30,7 +30,7 @@ ENV TZ=UTC \
 COPY client/package.json client/package-lock.json ./
 
 # Deterministic install
-RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund --registry https://registry.npmjs.org/
+RUN npm ci --ignore-scripts --no-audit --no-fund --registry https://registry.npmjs.org/
 
 # Copy source
 COPY client/ ./
