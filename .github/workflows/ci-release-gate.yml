@@ -54,7 +54,7 @@ jobs:
           
   run-trivy:
     name: Run Trivy
-    if: ${{ inputs.enable_full_gate }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.enable_full_gate }}
     needs: [resolve]
     permissions:
       contents: read
@@ -63,8 +63,8 @@ jobs:
       actions: read          # Required for workflow context resolution
     uses: ./.github/workflows/ci-security-deep.yml
 
-  reproducibility-pilot-backend:
-    name: Reproducibility Check (Backend)
+  reproducibility-pilot:
+    name: Reproducibility Check
     needs: [resolve]
     runs-on: ubuntu-latest
     environment: staging
@@ -116,7 +116,7 @@ jobs:
 
   build-push-backend:
     name: Build & Push
-    if: ${{ inputs.enable_full_gate }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.enable_full_gate }}
     needs: [resolve, run-trivy]
     permissions:
       contents: read           # Needed to read repository contents.
@@ -142,7 +142,7 @@ jobs:
                     
   build-push-frontend:    
     name: Build & Push
-    if: ${{ inputs.enable_full_gate }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.enable_full_gate }}
     needs: [resolve, run-trivy]
     permissions:
       contents: read           # Needed to read repository contents.
@@ -168,7 +168,7 @@ jobs:
 
   build-push-worker:    
     name: Build & Push
-    if: ${{ inputs.enable_full_gate }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.enable_full_gate }}
     needs: [resolve, run-trivy]
     permissions:
       contents: read           # Needed to read repository contents.
@@ -194,7 +194,7 @@ jobs:
   
   trivy-scan:    
     name: Trivy Scan (Digest Gate)
-    if: ${{ inputs.enable_full_gate }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.enable_full_gate }}
     needs: [ build-push-frontend, build-push-backend, build-push-worker ]
     permissions:
       contents: read
@@ -214,7 +214,7 @@ jobs:
      
   dast-analysis:
     name: DAST (Digest-based)
-    if: ${{ inputs.enable_full_gate }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.enable_full_gate }}
     needs: [ build-push-frontend, build-push-backend, build-push-worker, resolve ]
     permissions:
       contents: read
