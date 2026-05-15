@@ -15,7 +15,7 @@ on:
           description: 'Enable run-trivy, build/push and downstream scans'
           type: boolean
           default: false
-        emergency_override:
+        OVERRIDE_REPRODUCIBILITY_GATE:
           description: '⚠️ BREAK GLASS: Bypass reproducibility gate (Requires Incident Ticket)'
           type: boolean
           required: true

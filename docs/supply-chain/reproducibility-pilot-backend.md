@@ -82,6 +82,16 @@ Interpretation:
 
 ## Pilot Evidence Record
 
+### 2026-05-13 Release Run: Backend Success
+
+- Status: `pass`
+- Comparison basis: `oci_manifest_digest`
+- Manifest digest: `sha256:f5fb9044ff7288c358b20a3364ae680557ef457eaaf61d203cb1775331e9525d`
+- Config digest: `sha256:9674628727e420ca9bebad04f1f6be527aa4e4e52ba47c3d7213be70a113c279`
+- Layer count: `8` layers on `linux/amd64`
+- Detailed comparison: All layer digests and config JSON fields matched perfectly with zero differences.
+- Evidence artifacts: `report.json` and `summary.md` uploaded as workflow artifacts and also find in `docs/supply-chain/evidence/2026-05-13-backend-success/`
+
 ### 2026-05-08 release run report
 
 Outcome:
