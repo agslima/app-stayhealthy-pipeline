@@ -47,7 +47,6 @@ runs:
   using: "composite"
   steps:
     - name: Install OPA
-      shell: bash
       uses: ./.github/actions/install-opa
       with:
         version: 'v1.16.2'
@@ -105,7 +104,7 @@ runs:
         echo "$RESULT"
 
         ALLOW=$(jq -r '.result[0].expressions[0].value.allow // false' decision.json)
-        if [ "$ALLOW" = "true" ]; then
+        if [[ "$ALLOW" = "true" ]]; then
           echo "decision=allow" >> $GITHUB_OUTPUT
         else
           echo "decision=deny" >> $GITHUB_OUTPUT
@@ -129,7 +128,7 @@ runs:
       run: |
         set -euo pipefail
 
-        if [ "${{ steps.eval.outputs.decision }}" = "deny" ]; then
+        if [[ "${{ steps.eval.outputs.decision }}" = "deny" ]]; then
           echo "::error::Policy denied"
           exit 1
         fi
