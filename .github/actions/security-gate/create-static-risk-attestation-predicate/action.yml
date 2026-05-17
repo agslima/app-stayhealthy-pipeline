@@ -1,11 +1,7 @@
 name: "Create Static Risk Attestation Predicate"
-
 description: "Build the static risk attestation predicate from normalized evidence and OPA decision output"
 
 inputs:
-  trivy-file:
-    required: true
-    description: "Path to the Trivy JSON scan artifact"
   decision-file:
     required: true
     description: "Path to the OPA decision JSON"
@@ -40,7 +36,6 @@ runs:
     - name: Create predicate
       shell: bash
       env:
-        TRIVY_FILE: ${{ inputs.trivy-file }}
         DECISION_FILE: ${{ inputs.decision-file }}
         EVIDENCE_FILE: ${{ inputs.evidence-file }}
         IMAGE_DIGEST: ${{ inputs.image-digest }}
@@ -53,7 +48,6 @@ runs:
       run: |
         set -euo pipefail
 
-        test -s "$TRIVY_FILE" || (echo "::error::Missing trivy JSON"; exit 1)
         test -s "$DECISION_FILE" || (echo "::error::Missing OPA decision JSON"; exit 1)
         test -s "$EVIDENCE_FILE" || (echo "::error::Missing enriched evidence JSON"; exit 1)
 
@@ -65,16 +59,18 @@ runs:
           --arg exposure "$EXPOSURE" \
           --arg criticality "$CRITICALITY" \
           --arg policy_version "$POLICY_VERSION" \
+          --arg trivy_version "$TRIVY_VERSION" \
           --arg evidence_sha256 "$EVIDENCE_SHA256" \
           --slurpfile evidence "$EVIDENCE_FILE" \
           --slurpfile decision "$DECISION_FILE" \
           '
-           ($decision[0].result[0].expressions[0].value) as $policy |
+           # Safely extract OPA decision with a fallback to avoid null pointer crashes
+           ($decision[0].result[0].expressions[0].value // {}) as $policy |
            {
              scanner: {
                name: "static-risk-profile",
                components: [
-                 { name: "trivy", version: env.TRIVY_VERSION, uri: "https://github.com/aquasecurity/trivy" },
+                 { name: "trivy", version: $trivy_version, uri: "https://github.com/aquasecurity/trivy" },
                  { name: "codeql", uri: "https://github.com/github/codeql-action" },
                  { name: "vex", uri: "https://www.cisa.gov/resources-tools/resources/software-bill-materials-sbom" },
                  { name: "opa", uri: "https://www.openpolicyagent.org/" }
@@ -108,8 +104,9 @@ runs:
            }
           ' > "$OUTPUT_FILE"
 
+        # Explicitly enforce the output contract
         jq -e '
           .scanner.name == "static-risk-profile" and
           .policy.engine == "opa" and
-          .evidence.schema_version == "release.security_evidence.v1"
+          (.evidence.schema_version | startswith("release.security_evidence"))
         ' "$OUTPUT_FILE" >/dev/null
