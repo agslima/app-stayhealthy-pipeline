@@ -18,6 +18,8 @@ VEX_FILE="$3"
 OUTPUT="${4:-security-evidence.json}"
 
 test -s "$TRIVY_FILE" || { echo "::error::Trivy JSON missing/empty: $TRIVY_FILE"; exit 1; }
+jq -e '.Results? | type == "array"' "$TRIVY_FILE" >/dev/null \
+  || { echo "::error::Invalid Trivy JSON: missing Results array"; exit 1; }
 
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -132,8 +134,8 @@ jq -n \
         installed_version: ($tv.InstalledVersion // null),
         fixed_version: ($tv.FixedVersion // null),
         reachable: (
-          if $codeql_available
-          then any($sast[]; ([.id, .rule_id] + (.tags // []) + (.cves // [])) | index($tv.VulnerabilityID))
+          if $codeql_available and any($sast[]; ([.id, .rule_id] + (.tags // []) + (.cves // [])) | index($tv.VulnerabilityID))
+          then true
           else null
           end
         ),

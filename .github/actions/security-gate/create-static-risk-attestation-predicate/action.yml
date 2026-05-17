@@ -99,7 +99,7 @@ runs:
                deny: ($policy.deny // [])
              },
              evidence: {
-               schema_version: "release.security_evidence.v1",
+               schema_version: $evidence[0].schema_version,
                sha256: $evidence_sha256,
                sources: $evidence[0].sources
              },

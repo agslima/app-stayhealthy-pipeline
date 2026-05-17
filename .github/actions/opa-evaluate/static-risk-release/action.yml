@@ -48,11 +48,9 @@ runs:
   steps:
     - name: Install OPA
       shell: bash
-      run: |
-        set -euo pipefail
-        curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64_static
-        chmod +x opa
-        sudo mv opa /usr/local/bin/
+      uses: ./.github/actions/install-opa
+      with:
+        version: 'v1.16.2'
     - name: Prepare Input
       env:
         EXPOSURE: ${{ inputs.exposure }}

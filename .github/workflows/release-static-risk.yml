@@ -175,6 +175,10 @@ jobs:
         with:
           name: codeql-release-sarif
           path: static-risk-inputs/codeql
+      # That generates a conservative VEX document that assumes all discovered CVEs 
+      # are "affected" with no suppressions or mitigations.
+      # The OPA step has a complete view of the potential vulnerabilities, 
+      # This prevent any known vulnerabilities from being overlooked.
       - name: Generate conservative VEX assertions
         run: |
           set -euo pipefail
@@ -220,6 +224,7 @@ jobs:
             "security-evidence-${{ matrix.name }}.json"
       - name: Evaluate static risk policy
         id: opa
+        continue-on-error: true
         uses: ./.github/actions/opa-evaluate/static-risk-release
         with:
           evidence-file: security-evidence-${{ matrix.name }}.json
@@ -232,11 +237,13 @@ jobs:
           image-repo: ${{ matrix.image_repo }}
           image-digest: ${{ matrix.image-digest }}
       - name: Preserve static risk decision artifacts
+        if: always()
         run: |
           set -euo pipefail
           cp enriched.json "security-evidence-enriched-${{ matrix.name }}.json"
           cp decision.json "opa-decision-${{ matrix.name }}.json"
       - name: Upload static risk artifacts
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: static-risk-results-${{ matrix.name }}
@@ -245,6 +252,9 @@ jobs:
             security-evidence-enriched-${{ matrix.name }}.json
             opa-decision-${{ matrix.name }}.json
             vex-${{ matrix.name }}.json
+      - name: Fail if static risk policy denied
+        if: steps.opa.outputs.decision == 'deny'
+        run: exit 1
       - name: Summarize static risk decision
         run: |
           set -euo pipefail
@@ -322,10 +332,10 @@ jobs:
           cat <<EOF >> "$GITHUB_ENV"
           DIGEST=$DIGEST
           DOCKER_IMAGE=docker.io/${DOCKER_USERNAME}/${{ matrix.image_repo }}@${DIGEST}
-          GHCR_IMAGE=ghcr.io/${{ github.repository_owner }}/${{ matrix.image_repo }}@${DIGEST}
+          GHCR_IMAGE=ghcr.io/${{ inputs.ghcr_username }}/${{ matrix.image_repo }}@${DIGEST}
           EOF
       - name: Create static risk attestation predicate
-        uses: ./.github/actions/create-static-risk-attestation-predicate
+        uses: ./.github/actions/security-gate/create-static-risk-attestation-predicate
         with:
           trivy-file: trivy-downloads/trivy-${{ matrix.name }}.json
           decision-file: static-risk-downloads/opa-decision-${{ matrix.name }}.json
@@ -354,7 +364,7 @@ jobs:
               FAILURES+=("$IMAGE")
             fi
           done
-          if [ ${#FAILURES[@]} -gt 0 ]; then
+          if [[ ${#FAILURES[@]} -gt 0 ]]; then
             echo "::error::Failed to attest: ${FAILURES[*]}"
             exit 1
           fi

@@ -44,4 +44,4 @@ To validate that the governance model works in practice, the application describ
 | ![Initial Snyk vulnerability scan](https://github.com/agslima/software-delivery-pipeline/blob/main/docs/images/scan-snyk-01.png) |
 
 >[!NOTE]
-> This section provides **governance evidence**, not the release admission decision itself. Snyk snapshots document published posture over time, but release blocking is governed by the Trivy and ZAP controls mapped in [`docs/threat-model.md`](docs/threat-model.md) and [`docs/governance.md`](docs/governance.md#readme-claims--controls-matrix).
+> This section provides **governance evidence**, not the release admission decision itself. Snyk snapshots document published posture over time, while release blocking is governed by OPA-evaluated static risk evidence (normalized Trivy/CodeQL/VEX) and ZAP controls mapped in [`docs/threat-model.md`](docs/threat-model.md) and [`docs/governance.md`](docs/governance.md#readme-claims--controls-matrix).
