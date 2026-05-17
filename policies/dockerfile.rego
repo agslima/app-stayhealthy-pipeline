@@ -91,29 +91,17 @@ allowed_base(img) if {
 # IMAGE CLASSIFICATION
 # ============================================================
 
-is_node(img) if {
-	repo := repo_name(img)
-	repo == "node"
+node_repos := {
+	"node",
+	"docker.io/node",
+	"library/node",
+	"docker.io/library/node",
+	"chainguard/node",
+	"cgr.dev/chainguard/node",
 }
+
 is_node(img) if {
-	repo := repo_name(img)
-	repo == "docker.io/node"
-}
-is_node(img) if {
-	repo := repo_name(img)
-	repo == "library/node"
-}
-is_node(img) if {
-	repo := repo_name(img)
-	repo == "docker.io/library/node"
-}
-is_node(img) if {
-	repo := repo_name(img)
-	repo == "chainguard/node"
-}
-is_node(img) if {
-	repo := repo_name(img)
-	repo == "cgr.dev/chainguard/node"
+	node_repos[repo_name(img)]
 }
 
 is_nginx(img) if {
@@ -228,9 +216,9 @@ warn contains msg if {
 # Frontend runtime hint
 warn contains msg if {
 	x := from_instructions[_]
-	img := base_image(x)
 
 	is_runtime_stage(x)
+	img := base_image(x)
 	is_node(img)
 
 	msg := sprintf(

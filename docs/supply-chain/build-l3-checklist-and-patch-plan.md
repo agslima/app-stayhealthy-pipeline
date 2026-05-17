@@ -2,7 +2,7 @@
 
 [//]: # (owner: Project Maintainers)
 [//]: # (review_cadence: Quarterly)
-[//]: # (last_reviewed: 2026-05-13)
+[//]: # (last_reviewed: 2026-05-16)
 
 ## Goal
 
@@ -21,7 +21,6 @@ The trusted workflow set for this plan is:
 - `.github/workflows/release-trivy.yml`
 - `.github/workflows/release-dast.yml`
 - `.github/workflows/gitops-enforce.yml`
-
 
 ## Build L3 Checklist
 
@@ -83,7 +82,7 @@ reduce repository-level mutable inputs that are still easy to patch without plat
 
 Checklist:
 
-- [x] Evaluate whether `slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0` can be pinned by commit SHA instead of release tag in `ci-release-gate.yml`: currently, the SLSA reusable workflow does not support being pinned by commit SHA. So it will stay as they are.
+- [x] Evaluate whether `slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0` can be pinned by commit SHA instead of release tag in `ci-release-gate.yml`: currently, the SLSA reusable workflow does not support being pinned by commit SHA; the tag-based ref is the required approach for slsa-github-generator.
 - [x] Continue converting installer steps to checksum-verified or mirrored sources where possible.
 - [x] Review whether any trusted workflow still implicitly depends on mutable defaults such as `latest` resolution or unpinned runtime images.
 
@@ -122,7 +121,7 @@ Checklist:
 - [ ] Design a mirrored or pre-fetched package-source approach for `npm ci` in `release-build-push-dual-registry.yml`.
 - [ ] Decide whether Trivy DB mirroring is warranted by operational history.
 - [ ] Review whether release builds should avoid or further constrain remote pulls beyond current digest pinning.
-- [ ] Investigate the 2026-05-08 backend pilot mismatch before expanding reproducibility checks to additional images or using the backend result as stronger SLSA evidence.
+- [x] Investigate the 2026-05-08 backend pilot mismatch before expanding reproducibility checks to additional images or using the backend result as stronger SLSA evidence.
 
 Primary patch targets:
 
@@ -150,31 +149,17 @@ Expected evidence rather than code:
 
 ## Workflow-Specific Patch Notes
 
-### `ci-release-gate.yml`
-
-Patches:
-
-- future rollout of reproducibility evidence beyond pilot status
-
 ### `release-build-push-dual-registry.yml`
 
 Patches:
 
 - reduce live `npm ci` dependency influence
-- evaluate whether build metadata normalization used in the reproducibility pilot should influence the main build path
 
 ### `release-trivy.yml`
 
 Patches:
 
 - decide whether DB mirroring is necessary
-
-### `release-dast.yml`
-
-Patches:
-
-- tighten file permissions further if needed
-- keep ephemeral environment assumptions documented as part of builder-isolation review
 
 ## Claim Gate
 
