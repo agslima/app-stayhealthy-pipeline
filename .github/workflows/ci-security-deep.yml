@@ -2,7 +2,8 @@ name: Daily Security Scan
 
 on:
   schedule:
-    - cron: "0 2 * * *"
+    - cron: "0 2 * * *" # Runs at 02:00
+      timezone: 'America/Sao_Paulo'
   workflow_dispatch: {}  # allow manual runs for testing
   workflow_call:
     inputs:
@@ -20,7 +21,7 @@ on:
         description: 'Path to the risk acceptance script in the caller repository'
         required: false
         type: string
-        default: 'scripts/check-security-debt.sh'
+        default: 'agslima/app-stayhealthy-pipeline/scripts/check-security-debt.sh'
   pull_request:  # add itself for testing changes to this workflow
     paths:
       - '.github/workflows/ci-security-deep.yml'
@@ -137,10 +138,12 @@ jobs:
       - name: Enforce Risk Acceptance Policy
         continue-on-error: true
         id: gate
+        env:
+          POLICY_SCRIPT: ${{ inputs.policy_script_path }}
         run: |
           set -euo pipefail
-          chmod +x scripts/check-security-debt.sh
-          ./scripts/check-security-debt.sh trivy-governance.json
+          chmod +x ${POLICY_SCRIPT}
+          ${POLICY_SCRIPT} trivy-governance.json
       - name: Fail job if gate failed
         if: ${{ steps.gate.outcome == 'failure' }}
         run: exit 1
