@@ -225,7 +225,7 @@ jobs:
       - name: Evaluate static risk policy
         id: opa
         continue-on-error: true
-        uses: ./.github/actions/opa-evaluate/static-risk-release
+        uses: agslima/app-stayhealthy-pipeline/.github/actions/opa-evaluate/static-risk-release@main
         with:
           evidence-file: security-evidence-${{ matrix.name }}.json
           policy-bundle: policies/release/${{ inputs.sast-policy-version }}.sast-supplychain.rego
@@ -335,7 +335,7 @@ jobs:
           GHCR_IMAGE=ghcr.io/${{ inputs.ghcr_username }}/${{ matrix.image_repo }}@${DIGEST}
           EOF
       - name: Create static risk attestation predicate
-        uses: ./.github/actions/security-gate/create-static-risk-attestation-predicate
+        uses: agslima/app-stayhealthy-pipeline/.github/actions/security-gate/create-static-risk-attestation-predicate@main
         with:
           decision-file: static-risk-downloads/opa-decision-${{ matrix.name }}.json
           evidence-file: static-risk-downloads/security-evidence-enriched-${{ matrix.name }}.json
