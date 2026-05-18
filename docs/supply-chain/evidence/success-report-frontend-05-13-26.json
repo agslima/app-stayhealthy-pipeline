@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.2",
+  "image_name": "frontend",
+  "status": "pass",
+  "comparison_basis": "oci_manifest_digest",
+  "comparison": {
+    "manifest_digest_match": true,
+    "config_digest_match": true,
+    "layer_count_match": true,
+    "layer_digests_match": true,
+    "layer_diffs": [],
+    "layer_file_diffs": [],
+    "config_field_diffs": []
+  },
+  "runs": [
+    {
+      "name": "first",
+      "archive": "/home/runner/work/app-stayhealthy-pipeline/app-stayhealthy-pipeline/artifacts/repro-frontend/run-1.oci.tar",
+      "archive_sha256": "58938f8b23893471b3cdcc66960202d4741428d43e37c9d41b6009d33ed8f47b",
+      "manifest_digest": "sha256:921dfab05edd042b96989d73392e95e1ce6b789dc5cf4aab3dc18b4c34b5bf32",
+      "config_digest": "sha256:30c2a01c246793bc92ccc16ebfdc641f88b5e1187b19bbbf0dc3f6fcd19e405b",
+      "layer_count": 12,
+      "layer_digests": [
+        "sha256:a5bfa7101982291c5462599e1eb8bc10b735e11d87315dc410d32701854a8df1",
+        "sha256:860e1c8a11b7b2efc375891fded78cd87961dafe0801554372faaf6e517622ff",
+        "sha256:52902e3771a178ce3578ee2d12a0f661b75977157ee17f451ce8b7481d155983",
+        "sha256:60f8e8edbce67e271e80743d4009f59d3b8eb366dc5ed24150e37c7f75c2393f",
+        "sha256:9201e51fe8c1f99c6602ba89bc6cbd3895501936ba9f62f705bb8f150d9bbace",
+        "sha256:7c6e71c1fdfdf429844e25aad86441920641c0ba46466bc1d043556bfb81b24e",
+        "sha256:b7f1816b5f236acfb30211376d2d7c9dd153c13c62552bfed9e05c90a9327c5d",
+        "sha256:8d99fd8fea9c370971ba3ab2ab453586d6a437c40211fea16fdb1445d876e907",
+        "sha256:054d7c02a8ce1c80947a40adde94e180850a2518a652132b519faa28e8721b6e",
+        "sha256:b6b4549f76f052749d905fabd9c8e065b6d57cc7f50f22f56f27cfd4abdec571",
+        "sha256:aefe152aefbdfff11a3d4ee3f6d330ce5cac230056da7fc938a49890b4ba6e5c",
+        "sha256:608317acdf53c6a932fbccc55322c465dc811f480dc5a32e15bcd7bd780202cb"
+      ],
+      "platform": "linux/amd64",
+      "ref_name": ""
+    },
+    {
+      "name": "second",
+      "archive": "/home/runner/work/app-stayhealthy-pipeline/app-stayhealthy-pipeline/artifacts/repro-frontend/run-2.oci.tar",
+      "archive_sha256": "58938f8b23893471b3cdcc66960202d4741428d43e37c9d41b6009d33ed8f47b",
+      "manifest_digest": "sha256:921dfab05edd042b96989d73392e95e1ce6b789dc5cf4aab3dc18b4c34b5bf32",
+      "config_digest": "sha256:30c2a01c246793bc92ccc16ebfdc641f88b5e1187b19bbbf0dc3f6fcd19e405b",
+      "layer_count": 12,
+      "layer_digests": [
+        "sha256:a5bfa7101982291c5462599e1eb8bc10b735e11d87315dc410d32701854a8df1",
+        "sha256:860e1c8a11b7b2efc375891fded78cd87961dafe0801554372faaf6e517622ff",
+        "sha256:52902e3771a178ce3578ee2d12a0f661b75977157ee17f451ce8b7481d155983",
+        "sha256:60f8e8edbce67e271e80743d4009f59d3b8eb366dc5ed24150e37c7f75c2393f",
+        "sha256:9201e51fe8c1f99c6602ba89bc6cbd3895501936ba9f62f705bb8f150d9bbace",
+        "sha256:7c6e71c1fdfdf429844e25aad86441920641c0ba46466bc1d043556bfb81b24e",
+        "sha256:b7f1816b5f236acfb30211376d2d7c9dd153c13c62552bfed9e05c90a9327c5d",
+        "sha256:8d99fd8fea9c370971ba3ab2ab453586d6a437c40211fea16fdb1445d876e907",
+        "sha256:054d7c02a8ce1c80947a40adde94e180850a2518a652132b519faa28e8721b6e",
+        "sha256:b6b4549f76f052749d905fabd9c8e065b6d57cc7f50f22f56f27cfd4abdec571",
+        "sha256:aefe152aefbdfff11a3d4ee3f6d330ce5cac230056da7fc938a49890b4ba6e5c",
+        "sha256:608317acdf53c6a932fbccc55322c465dc811f480dc5a32e15bcd7bd780202cb"
+      ],
+      "platform": "linux/amd64",
+      "ref_name": ""
+    }
+  ]
+}

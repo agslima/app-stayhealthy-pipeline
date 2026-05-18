@@ -137,9 +137,9 @@ def iter_steps(document: dict[str, Any]) -> list[tuple[str, dict[str, Any]]]:
         document (dict[str, Any]): Parsed YAML mapping of a workflow file; expected to contain a top-level "jobs" mapping where each job may include a "steps" sequence.
 
     Returns:
-        list[tuple[str, dict[str, Any]]]: A list of (location, step) tuples where `location` is a 
-        string like "jobs.<job_name>.steps[<1-based index>]" and `step` is 
-        the corresponding step dictionary. Only steps that are mappings are included; jobs or steps 
+        list[tuple[str, dict[str, Any]]]: A list of (location, step) tuples where `location` is a
+        string like "jobs.<job_name>.steps[<1-based index>]" and `step` is
+        the corresponding step dictionary. Only steps that are mappings are included; jobs or steps
         with unexpected types are skipped.
     """
     jobs = document.get("jobs")

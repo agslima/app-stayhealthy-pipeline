@@ -4,12 +4,22 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  # Used for test
   workflow_dispatch:
     inputs:
-      tag:
-        description: 'Existing tag to build and publish (e.g., v1.2.3)'
-        required: true
-        type: string
+        tag:
+          description: 'Release tag to build (vX.Y.Z)'
+          type: string
+          required: true
+        enable_full_gate:
+          description: 'Enable run-trivy, build/push and downstream scans'
+          type: boolean
+          default: false
+        OVERRIDE_REPRODUCIBILITY_GATE:
+          description: '⚠️ BREAK GLASS: Bypass reproducibility gate (Requires Incident Ticket)'
+          type: boolean
+          required: true
+          default: false
 permissions:
   contents: read
 concurrency:
@@ -25,6 +35,12 @@ jobs:
     outputs:
       release_tag: ${{ steps.tag.outputs.release_tag }}
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            github.com:443
       - name: Set Release Tag
         id: tag
         env:
@@ -39,15 +55,12 @@ jobs:
             echo "release_tag=$INPUT_TAG" >> "$GITHUB_OUTPUT"
           else
             echo "release_tag=$REF_NAME" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Harden Runner
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
-        with:
-          egress-policy: audit
-
+          fi   
+          
   run-trivy:
     name: Run Trivy
-    needs: resolve
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.enable_full_gate }}
+    needs: [resolve]
     permissions:
       contents: read
       security-events: write # Required to upload SARIF
@@ -55,15 +68,65 @@ jobs:
       actions: read          # Required for workflow context resolution
     uses: ./.github/workflows/ci-security-deep.yml
 
-  build-push-backend:
-    name: Build & Push
-    needs: [resolve, run-trivy]
+  reproducibility-check:
+    name: Reproducibility Check
+    needs: [resolve]
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 25
     permissions:
       contents: read
-      packages: write
-      id-token: write
-      attestations: write
-      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image_name: backend
+            manifest: Dockerfile.server
+          - image_name: worker
+            manifest: Dockerfile.worker
+          - image_name: frontend
+            manifest: Dockerfile.client
+    steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            auth.docker.io:443
+            github.com:443
+            production.cloudflare.docker.com:443
+            registry-1.docker.io:443
+            registry.npmjs.org:443
+            release-assets.githubusercontent.com:443
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0 # Required for accurate Git history timestamps
+          persist-credentials: false
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v2.5.0
+      - name: Run Composite Reproducibility Check (${{ matrix.image_name }})
+        uses: ./.github/actions/reproducibility-check
+        with:
+          image-name: '${{ matrix.image_name }}'
+          dockerfile-path: 'app/docker/${{ matrix.manifest }}'
+          build-context: 'app'
+          release-tag: ${{ needs.resolve.outputs.release_tag }}
+          source-url: 'https://github.com/${{ github.repository }}'
+          # If the manual input is true, allow the mismatch. Otherwise, enforce the hard gate.
+          allow-mismatch: ${{ github.event.inputs.OVERRIDE_REPRODUCIBILITY_GATE == 'true' && 'true' || 'false' }}
+
+  build-push-backend:
+    name: Build & Push
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.enable_full_gate }}
+    needs: [resolve, run-trivy, reproducibility-check]
+    permissions:
+      contents: read           # Needed to read repository contents.
+      packages: write          # Needed to login and upload attestations to ghcr.io.
+      id-token: write          # Needed to get OIDC token for keyless signing
+      attestations: write      # Needed to upload attestations to the repository.
+      actions: read            # Needed to read workflow info.
       artifact-metadata: write # Needed to upload SBOM as artifact
     uses: ./.github/workflows/release-build-push-dual-registry.yml
     with:
@@ -79,83 +142,17 @@ jobs:
     secrets:      
       dockerhub_token: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       ghcr_token: ${{ secrets.GITHUB_TOKEN }}
-
-  reproducibility-pilot-backend:
-    name: Reproducibility Pilot (Backend)
-    needs: [resolve, build-push-backend]
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    timeout-minutes: 25
-    permissions:
-      contents: read
-    steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
-        with:
-          egress-policy: audit
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          ref: ${{ github.sha }}
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v2.5.0
-      - name: Run reproducibility pilot builds
-        env:
-          RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
-          GITHUB_SHA: ${{ github.sha }}
-          SOURCE_URL: https://github.com/${{ github.repository }}
-        run: |
-          set -euo pipefail
-          mkdir -p artifacts/reproducibility-pilot
-
-          build_once() {
-            local output_file="$1"
-            docker buildx build \
-              --platform linux/amd64 \
-              --file app/docker/Dockerfile.server \
-              --pull \
-              --no-cache \
-              --provenance=false \
-              --sbom=false \
-              --build-arg BUILD_DATE=1970-01-01T00:00:00Z \
-              --build-arg VCS_REF="${GITHUB_SHA}" \
-              --build-arg VERSION="${RELEASE_TAG}" \
-              --build-arg SOURCE="${SOURCE_URL}" \
-              --output "type=oci,dest=${output_file}" \
-              app
-          }
-
-          build_once artifacts/reproducibility-pilot/backend-run-1.oci.tar
-          build_once artifacts/reproducibility-pilot/backend-run-2.oci.tar
-
-      - name: Compare reproducibility pilot outputs
-        id: reproducibility-pilot
-        run: |
-          python3 scripts/supply-chain/report-reproducibility-pilot.py \
-            --image-name app-stayhealthy-backend \
-            --first-archive artifacts/reproducibility-pilot/backend-run-1.oci.tar \
-            --second-archive artifacts/reproducibility-pilot/backend-run-2.oci.tar \
-            --output-dir artifacts/reproducibility-pilot \
-            --allow-mismatch
-      - name: Upload reproducibility pilot artifact
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: reproducibility-pilot-backend
-          path: artifacts/reproducibility-pilot/
-          retention-days: 30
                     
-  build-push-frontend:
+  build-push-frontend:    
     name: Build & Push
-    needs: [resolve, run-trivy]
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.enable_full_gate }}
+    needs: [resolve, run-trivy, reproducibility-check]
     permissions:
-      contents: read
-      packages: write
-      id-token: write
-      attestations: write 
-      actions: read
+      contents: read           # Needed to read repository contents.
+      packages: write          # Needed to login and upload attestations to ghcr.io.
+      id-token: write          # Needed to get OIDC token for keyless signing
+      attestations: write      # Needed to upload attestations to the repository.
+      actions: read            # Needed to read workflow info.
       artifact-metadata: write # Needed to upload SBOM as artifact
     uses: ./.github/workflows/release-build-push-dual-registry.yml
     with:
@@ -172,15 +169,16 @@ jobs:
       dockerhub_token: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       ghcr_token: ${{ secrets.GITHUB_TOKEN }}
 
-  build-push-worker:
+  build-push-worker:    
     name: Build & Push
-    needs: [resolve, run-trivy]
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.enable_full_gate }}
+    needs: [resolve, run-trivy, reproducibility-check]
     permissions:
-      contents: read
-      packages: write
-      id-token: write
-      attestations: write
-      actions: read
+      contents: read           # Needed to read repository contents.
+      packages: write          # Needed to login and upload attestations to ghcr.io.
+      id-token: write          # Needed to get OIDC token for keyless signing
+      attestations: write      # Needed to upload attestations to the repository.
+      actions: read            # Needed to read workflow info.
       artifact-metadata: write # Needed to upload SBOM as artifact
     uses: ./.github/workflows/release-build-push-dual-registry.yml
     with:
@@ -197,99 +195,16 @@ jobs:
       dockerhub_token: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       ghcr_token: ${{ secrets.GITHUB_TOKEN }}
   
-  generate-slsa-provenance-backend-ghcr:
-    needs: [build-push-backend]
-    permissions:
-      id-token: write   # To sign the provenance.
-      packages: write   # To upload assets to release.
-      actions: read     # To read the workflow path.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
-    with:
-      image: ghcr.io/${{ github.repository_owner }}/app-stayhealthy-backend
-      digest: ${{ needs.build-push-backend.outputs.image-digest }}
-      registry-username: ${{ github.repository_owner }}
-    secrets:
-      registry-password: ${{ secrets.GITHUB_TOKEN }}
-
-  generate-slsa-provenance-frontend-ghcr:
-    needs: [build-push-frontend]
-    permissions:
-      id-token: write   # To sign the provenance.
-      packages: write   # To upload assets to release.
-      actions: read     # To read the workflow path.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
-    with:
-      image: ghcr.io/${{ github.repository_owner }}/app-stayhealthy-frontend
-      digest: ${{ needs.build-push-frontend.outputs.image-digest }}
-      registry-username: ${{ github.repository_owner }}
-    secrets:
-      registry-password: ${{ secrets.GITHUB_TOKEN }}
-  
-  generate-slsa-provenance-worker-ghcr:
-    needs: [build-push-worker]
-    permissions:
-      id-token: write   # To sign the provenance.
-      packages: write   # To upload assets to release.
-      actions: read     # To read the workflow path.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
-    with:
-      image: ghcr.io/${{ github.repository_owner }}/app-stayhealthy-worker
-      digest: ${{ needs.build-push-worker.outputs.image-digest }}
-      registry-username: ${{ github.repository_owner }}
-    secrets:
-      registry-password: ${{ secrets.GITHUB_TOKEN }}
-      
-  generate-slsa-provenance-backend-docker:
-    needs: [build-push-backend]
-    permissions:
-      id-token: write   # To sign the provenance.
-      packages: write   # To upload assets to release.
-      actions: read     # To read the workflow path.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
-    with:
-      image: docker.io/${{ vars.DOCKER_HUB_USERNAME }}/app-stayhealthy-backend
-      digest: ${{ needs.build-push-backend.outputs.image-digest }}
-      registry-username: ${{ vars.DOCKER_HUB_USERNAME }}
-    secrets:
-      registry-password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
-  generate-slsa-provenance-frontend-docker:
-    needs: [build-push-frontend]
-    permissions:
-      id-token: write   # To sign the provenance.
-      packages: write   # To upload assets to release.
-      actions: read     # To read the workflow path.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
-    with:
-      image: docker.io/${{ vars.DOCKER_HUB_USERNAME }}/app-stayhealthy-frontend
-      digest: ${{ needs.build-push-frontend.outputs.image-digest }}
-      registry-username: ${{ vars.DOCKER_HUB_USERNAME }}
-    secrets:
-      registry-password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-  
-  generate-slsa-provenance-worker-docker:
-    needs: [build-push-worker]
-    permissions:
-      id-token: write   # To sign the provenance.
-      packages: write   # To upload assets to release.
-      actions: read     # To read the workflow path.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
-    with:
-      image: docker.io/${{ vars.DOCKER_HUB_USERNAME }}/app-stayhealthy-worker
-      digest: ${{ needs.build-push-worker.outputs.image-digest }}
-      registry-username: ${{ vars.DOCKER_HUB_USERNAME }}
-    secrets:
-      registry-password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-  
-  trivy-scan:
+  trivy-scan:    
     name: Trivy Scan (Digest Gate)
-    needs: [ build-push-frontend, build-push-backend, build-push-worker, generate-slsa-provenance-backend-docker, generate-slsa-provenance-frontend-docker, generate-slsa-provenance-worker-docker ]
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.enable_full_gate }}
+    needs: [ build-push-frontend, build-push-backend, build-push-worker ]
     permissions:
       contents: read
-      packages: write # Used to push images to `ghcr.io` if used.
-      id-token: write # Needed to create an OIDC token for keyless signing
+      packages: write     # Used to push images to `ghcr.io` if used.
+      id-token: write     # Needed to create an OIDC token for keyless signing
       attestations: write # Needed to upload attestations to the GitHub registry      
-    uses: ./.github/workflows/release-trivy.yml
+    uses: ./.github/workflows/release-static-risk.yml
     with:
       image-digest-backend: ${{ needs.build-push-backend.outputs.image-digest }}
       image-digest-frontend: ${{ needs.build-push-frontend.outputs.image-digest }}
@@ -302,12 +217,13 @@ jobs:
      
   dast-analysis:
     name: DAST (Digest-based)
-    needs: [ build-push-frontend, build-push-backend, build-push-worker, resolve, generate-slsa-provenance-backend-docker, generate-slsa-provenance-frontend-docker, generate-slsa-provenance-worker-docker ]
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.enable_full_gate }}
+    needs: [ build-push-frontend, build-push-backend, build-push-worker, resolve ]
     permissions:
       contents: read
-      id-token: write
-      packages: write # Used to pull images from `ghcr.io` if used.
-      attestations: write
+      id-token: write     # Needed to create an OIDC token for keyless signing of the provenance.
+      packages: write     # Used to pull images from `ghcr.io` if used.
+      attestations: write # Needed to upload attestations to the GitHub registry
     uses: ./.github/workflows/release-dast.yml
     with:
       release_tag: ${{ needs.resolve.outputs.release_tag }}

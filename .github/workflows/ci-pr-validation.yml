@@ -200,14 +200,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: ./.github/actions/install-kubeconform
       - name: Validate Kubernetes manifests
-        uses: docker://ghcr.io/yannh/kubeconform@sha256:0474f7372c0089c41890101f0e293db5798e05942c98bbcf8359f206731115ea # v0.7.0
-        with:
-          entrypoint: /kubeconform
-          args: >-
-            -summary
-            -output text
-            -ignore-missing-schemas
+        run: |
+          kubeconform -summary \
+            -output text \
+            -ignore-missing-schemas \
             k8s/
 
   # ==================================================================

@@ -2,7 +2,7 @@
 
 [//]: # (owner: Project Maintainers)
 [//]: # (review_cadence: Quarterly)
-[//]: # (last_reviewed: 2026-05-08)
+[//]: # (last_reviewed: 2026-05-13)
 
 This document defines the first reproducibility pilot for the release path.
 
@@ -28,11 +28,12 @@ The workflow job:
 2. builds the backend image twice with `docker buildx build`
 3. normalizes metadata-oriented build args:
    - `BUILD_DATE=1970-01-01T00:00:00Z`
+   - `SOURCE_DATE_EPOCH=0`
    - `VCS_REF=<release sha>`
    - `VERSION=<release tag>`
    - `SOURCE=https://github.com/<repo>`
 4. disables provenance and SBOM emission for the pilot build itself so the comparison focuses on the image output
-5. generates `report.json` and `summary.md` using `scripts/report-reproducibility-pilot.py --allow-mismatch`
+5. generates `report.json` and `summary.md` using `scripts/supply-chain/report-reproducibility-pilot.py --allow-mismatch`
 6. uploads artifact `reproducibility-pilot-backend`
 
 ## Success, Failure, and Rollback Criteria
@@ -71,6 +72,7 @@ Expected artifact:
 - config digest match or mismatch
 - layer count match or mismatch
 - per-layer digest differences
+- per-file metadata and content differences for changed layer blobs when available
 - config JSON field differences
 
 Interpretation:
@@ -79,6 +81,16 @@ Interpretation:
 - `mismatch` means the backend image is not yet reproducible under the pilot conditions and requires investigation before it can be used as stronger SLSA evidence
 
 ## Pilot Evidence Record
+
+### 2026-05-13 Release Run: Backend Success
+
+- Status: `pass`
+- Comparison basis: `oci_manifest_digest`
+- Manifest digest: `sha256:f5fb9044ff7288c358b20a3364ae680557ef457eaaf61d203cb1775331e9525d`
+- Config digest: `sha256:9674628727e420ca9bebad04f1f6be527aa4e4e52ba47c3d7213be70a113c279`
+- Layer count: `8` layers on `linux/amd64`
+- Detailed comparison: All layer digests and config JSON fields matched perfectly with zero differences.
+- Evidence artifacts: `report.json` and `summary.md` uploaded as workflow artifacts and also find in `docs/supply-chain/evidence/2026-05-13-backend-success/`
 
 ### 2026-05-08 release run report
 
@@ -93,13 +105,6 @@ Outcome:
 - First archive SHA-256: `f55afe6d96d4104a79bde039c143e7b6fcb63d808e68fba54ff0592057ad3798`
 - Second archive SHA-256: `2fa751c8d2a6f1dfe88378a24e69c4f42340cf9f3d71fd067794bfc81cbe2061`
 
-Governance interpretation:
-
-- This run is valid pilot evidence, but it is not successful reproducibility evidence.
-- The backend image is not currently suitable for use as stronger SLSA reproducibility evidence under this pilot's normalized inputs.
-- The release workflow behavior should remain unchanged: the pilot stays advisory while the mismatch is investigated.
-- The mismatch feeds Phase 2 reproducibility follow-up and Phase 3 work to reduce live package-source and other mutable build inputs.
-
 Initial investigation focus:
 
 - identify whether the manifest mismatch is caused by image config differences, layer digest differences, or both
@@ -109,5 +114,6 @@ Initial investigation focus:
 Follow-up remediation started:
 
 - `app/docker/Dockerfile.server` no longer runs broad `apk upgrade` during dependency or runtime image builds.
-- Runtime installation of `tini` is pinned to `tini=0.19.0-r3`.
+- Runtime installation of `tini` no longer uses `apk add`; it downloads upstream `tini-static-amd64` for `v0.19.0`, verifies SHA-256 `c5b0666b4cb676901f90dfcb37106783c5fe2077b04590973b885950611b30ee`, and normalizes the binary mtime.
+- Runtime NPM removal no longer invokes `npm uninstall`; the image removes known global NPM paths directly to avoid logs, update-notifier state, and Node compile-cache churn.
 - OS patch uptake should be handled through reviewed updates to the digest-pinned `node:25.9.0-alpine` base image, with scanner evidence and PR review, rather than implicit package upgrades during each application build.

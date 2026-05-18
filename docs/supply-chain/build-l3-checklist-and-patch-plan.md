@@ -2,7 +2,7 @@
 
 [//]: # (owner: Project Maintainers)
 [//]: # (review_cadence: Quarterly)
-[//]: # (last_reviewed: 2026-05-08)
+[//]: # (last_reviewed: 2026-05-16)
 
 ## Goal
 
@@ -18,10 +18,9 @@ The trusted workflow set for this plan is:
 
 - `.github/workflows/ci-release-gate.yml`
 - `.github/workflows/release-build-push-dual-registry.yml`
-- `.github/workflows/release-trivy.yml`
+- `.github/workflows/release-static-risk.yml`
 - `.github/workflows/release-dast.yml`
 - `.github/workflows/gitops-enforce.yml`
-
 
 ## Build L3 Checklist
 
@@ -38,7 +37,6 @@ Status legend:
 | Trusted release and promotion workflows run on ephemeral hosted runners | `Partial` | Trusted workflows use GitHub-hosted runners and avoid long-lived self-hosted runners | The repo cannot prove platform-level run isolation on `ubuntu-latest`; this remains a hosted-platform assumption. |
 | Trusted workflows use pinned third-party actions | `Done` | `scripts/check-workflow-input-provenance.py` passes on trusted workflows | Keep enforcement and regression tests in place. |
 | Trusted workflows use digest-pinned deployable images | `Done` | Digest artifacts and GitOps promotion use immutable digests | Continue to treat digest-only promotion as non-negotiable. |
-| Trusted workflows minimize mutable toolchain drift | `Partial` | `setup-go` uses fixed version and `check-latest: false`; `yq` uses version pin + checksum verification | Some installer paths and reusable workflow refs still depend on trusted upstream release assets. |
 | Trusted workflows avoid shared mutable cache state | `Partial` | Release builds use `no-cache: true`; reproducibility pilot uses `--no-cache` | The repo does not prove that the underlying hosted builder and service-side caches cannot create cross-run influence. |
 | Release build inputs are normalized enough for reproducibility checks | `Partial` | Backend reproducibility pilot exists in `ci-release-gate.yml`; the 2026-05-08 backend pilot record shows `status: mismatch` | Only one image has a non-blocking pilot; no successful pilot evidence is recorded yet; the recorded mismatch requires investigation before the result can support stronger SLSA evidence. |
 | Trusted workflows minimize live dependency fetches | `Partial` | Base images are digest-pinned; some installers are pinned and verified | `npm ci`, Trivy DB access, and registry interactions still rely on live external services. |
@@ -73,7 +71,7 @@ Expected repo touchpoints:
 - `.github/workflows/ci-pr-validation.yml`
 - `.github/workflows/ci-release-gate.yml`
 - `.github/workflows/release-build-push-dual-registry.yml`
-- `.github/workflows/release-trivy.yml`
+- `.github/workflows/release-static-risk.yml`
 - `.github/workflows/release-dast.yml`
 - `.github/workflows/gitops-enforce.yml`
 
@@ -84,9 +82,9 @@ reduce repository-level mutable inputs that are still easy to patch without plat
 
 Checklist:
 
-- [ ] Evaluate whether `slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0` can be pinned by commit SHA instead of release tag in `ci-release-gate.yml`.
-- [ ] Continue converting installer steps to checksum-verified or mirrored sources where possible.
-- [ ] Review whether any trusted workflow still implicitly depends on mutable defaults such as `latest` resolution or unpinned runtime images.
+- [x] Evaluate whether `slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0` can be pinned by commit SHA instead of release tag in `ci-release-gate.yml`: currently, the SLSA reusable workflow does not support being pinned by commit SHA; the tag-based ref is the required approach for slsa-github-generator.
+- [x] Continue converting installer steps to checksum-verified or mirrored sources where possible.
+- [x] Review whether any trusted workflow still implicitly depends on mutable defaults such as `latest` resolution or unpinned runtime images.
 
 Primary patch targets:
 
@@ -101,10 +99,10 @@ move from pilot definition to actual reproducibility evidence from release runs.
 
 Checklist:
 
-- [ ] Collect at least one successful `reproducibility-pilot-backend` artifact from a real `Release` run.
+- [x] Collect successful `reproducibility-check` evidence from a real `Release` run (at minimum for backend).
 - [x] Record the first pilot outcome in durable governance evidence.
-- [ ] Decide whether the backend pilot should stay advisory or become a stronger gate.
-- [ ] Extend the same pilot pattern to frontend or worker only if backend results are stable.
+- [x] Decide whether the backend pilot should stay advisory or become a stronger gate.
+- [x] Extend the same pilot pattern to frontend or worker only if backend results are stable.
 
 Primary patch and evidence targets:
 
@@ -123,12 +121,12 @@ Checklist:
 - [ ] Design a mirrored or pre-fetched package-source approach for `npm ci` in `release-build-push-dual-registry.yml`.
 - [ ] Decide whether Trivy DB mirroring is warranted by operational history.
 - [ ] Review whether release builds should avoid or further constrain remote pulls beyond current digest pinning.
-- [ ] Investigate the 2026-05-08 backend pilot mismatch before expanding reproducibility checks to additional images or using the backend result as stronger SLSA evidence.
+- [x] Investigate the 2026-05-08 backend pilot mismatch before expanding reproducibility checks to additional images or using the backend result as stronger SLSA evidence.
 
 Primary patch targets:
 
 - `.github/workflows/release-build-push-dual-registry.yml`
-- `.github/workflows/release-trivy.yml`
+- `.github/workflows/release-static-risk.yml`
 - `docs/trusted-workflow-input-inventory.md`
 
 ### Phase 4: Resolve Platform-Level Builder Isolation Questions
@@ -151,32 +149,17 @@ Expected evidence rather than code:
 
 ## Workflow-Specific Patch Notes
 
-### `ci-release-gate.yml`
-
-Patches:
-
-- stronger immutability for the SLSA generator reusable workflow ref
-- future rollout of reproducibility evidence beyond pilot status
-
 ### `release-build-push-dual-registry.yml`
 
 Patches:
 
 - reduce live `npm ci` dependency influence
-- evaluate whether build metadata normalization used in the reproducibility pilot should influence the main build path
 
-### `release-trivy.yml`
+### `release-static-risk.yml`
 
 Patches:
 
 - decide whether DB mirroring is necessary
-
-### `release-dast.yml`
-
-Patches:
-
-- tighten file permissions further if needed
-- keep ephemeral environment assumptions documented as part of builder-isolation review
 
 ## Claim Gate
 

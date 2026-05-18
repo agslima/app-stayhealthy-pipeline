@@ -1,0 +1,8 @@
+{
+  "allowed_images": [
+    "node",
+    "nginxinc/nginx-unprivileged",
+    "chainguard/node",
+    "chainguard/nginx"
+  ]
+}
