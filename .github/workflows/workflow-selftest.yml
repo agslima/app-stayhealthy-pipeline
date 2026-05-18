@@ -2,8 +2,8 @@ name: Workflow Self-Test
 
 on:
   schedule:
-    - cron: "0 4 * * 0" # Sundays 04:00 UTC
-      timezone: America/Sao_Paulo
+    - cron: "0 4 * * 0" # Sundays 04:00
+      timezone: 'America/Sao_Paulo'
   workflow_dispatch: {}
   pull_request:  # add itself for testing changes to this workflow
     paths:
@@ -20,8 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Check workflow files
-        uses: ./.github/actions/install-actionlint
+      - uses: ./.github/actions/install-actionlint
       - name: Check workflow files
         run: actionlint -color
 
@@ -30,6 +29,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - name: Setup Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
@@ -38,3 +40,23 @@ jobs:
         run: python3 -m pip install --require-hashes -r scripts/supply-chain/requirements-workflow-provenance.txt
       - name: Check workflow input provenance
         run: make check-provenance
+  
+  run_macaron:
+    name: Run Oracle Macaron
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+    # Check the GitHub Actions workflows in the repository for vulnerabilities.
+    # Note: adjust the policy_purl to refer to your repository URL.
+    - name: Run Macaron action
+      id: run_macaron
+      uses: oracle/macaron@4ddb55e3c9ef2c77b548be55c557078c4476fd9c # v0.24.0
+      with:
+        repo_path: ./
+        policy_file: check-github-actions
+        policy_purl: pkg:github.com/agslima/app-stayhealthy-pipeline@.*
+        reports_retention_days: 10
