@@ -47,7 +47,7 @@ runs:
   using: "composite"
   steps:
     - name: Install OPA
-      uses: ./.github/actions/install-opa
+      uses: agslima/app-stayhealthy-pipeline/.github/actions/install-opa@main
       with:
         version: 'v1.16.2'
     - name: Prepare Input
