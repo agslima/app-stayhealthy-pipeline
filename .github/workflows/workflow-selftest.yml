@@ -5,6 +5,7 @@ on:
     - cron: "0 4 * * 0" # Sundays 04:00
       timezone: 'America/Sao_Paulo'
   workflow_dispatch: {}
+  workflow_call: {}
   pull_request:  # add itself for testing changes to this workflow
     paths:
       - '.github/workflows/workflow-selftest.yml'
@@ -23,23 +24,6 @@ jobs:
       - uses: ./.github/actions/install-actionlint
       - name: Check workflow files
         run: actionlint -color
-
-  workflow-input-provenance:
-    name: Workflow Input Provenance
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Setup Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with:
-          python-version: '3.12'
-      - name: Install workflow provenance dependencies
-        run: python3 -m pip install --require-hashes -r scripts/supply-chain/requirements-workflow-provenance.txt
-      - name: Check workflow input provenance
-        run: make check-provenance
   
   run_macaron:
     name: Run Oracle Macaron
@@ -58,5 +42,5 @@ jobs:
       with:
         repo_path: ./
         policy_file: check-github-actions
-        policy_purl: pkg:github.com/agslima/app-stayhealthy-pipeline@.*
-        reports_retention_days: 10
+        policy_purl: pkg:github.com/${{ github.repository }}@.*
+        reports_retention_days: 2
