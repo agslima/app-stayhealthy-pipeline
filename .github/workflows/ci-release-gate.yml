@@ -195,12 +195,14 @@ jobs:
       dockerhub_token: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       ghcr_token: ${{ secrets.GITHUB_TOKEN }}
   
-  trivy-scan:    
-    name: Trivy Scan (Digest Gate)
+  static-risk-attestation:    
+    name: Run Static Risk (Trivy+VEX+CodeQL)
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.enable_full_gate }}
     needs: [ build-push-frontend, build-push-backend, build-push-worker ]
     permissions:
       contents: read
+      actions: read
+      security-events: write
       packages: write     # Used to push images to `ghcr.io` if used.
       id-token: write     # Needed to create an OIDC token for keyless signing
       attestations: write # Needed to upload attestations to the GitHub registry      
@@ -216,7 +218,7 @@ jobs:
       ghcr_token: ${{ secrets.GITHUB_TOKEN }}
      
   dast-analysis:
-    name: DAST (Digest-based)
+    name: Run DAST (OWASP ZAP)
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.enable_full_gate }}
     needs: [ build-push-frontend, build-push-backend, build-push-worker, resolve ]
     permissions:
