@@ -23,7 +23,7 @@ inputs:
   report-script-path:
     description: 'Path to the Python reproducibility report script'
     required: true
-    default: 'scripts/supply-chain/report-reproducibility-pilot.py'
+    default: 'agslima/app-stayhealthy-pipeline/scripts/supply-chain/report-reproducibility-pilot.py'
   allow-mismatch:
     description: 'Set to "true" for a soft-gate pilot, "false" to fail the build on digest mismatch'
     required: false
