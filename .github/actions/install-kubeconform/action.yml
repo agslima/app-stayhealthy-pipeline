@@ -1,0 +1,47 @@
+name: 'Install Secure kubeconform'
+description: 'Downloads kubeconform for Linux amd64, verifies a pinned SHA-256 archive hash, and installs it securely.'
+
+inputs:
+  version:
+    description: 'The semantic version of kubeconform to install (e.g. 0.7.0). Do not include the "v" prefix.'
+    required: true
+    default: '0.7.0'
+  sha256:
+    description: 'SHA-256 of the kubeconform .tar.gz archive for the requested version.'
+    required: true
+    default: 'c31518ddd122663b3f3aa874cfe8178cb0988de944f29c74a0b9260920d115d3' 
+
+runs:
+  using: composite
+  steps:
+    - name: Download, verify, and install kubeconform
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+        KUBECONFORM_SHA256: ${{ inputs.sha256 }}
+      run: |
+        set -euo pipefail
+        
+        KUBECONFORM_ARCHIVE="kubeconform-linux-amd64.tar.gz"
+        KUBECONFORM_URL="https://github.com/yannh/kubeconform/releases/download/v${VERSION}/${KUBECONFORM_ARCHIVE}"
+
+        TMP_DIR="$(mktemp -d)"
+        trap 'rm -rf "$TMP_DIR"' EXIT
+
+        echo "⬇️ Downloading kubeconform v${VERSION}..."
+        curl --proto '=https' --tlsv1.2 -fsSL "$KUBECONFORM_URL" -o "${TMP_DIR}/${KUBECONFORM_ARCHIVE}"
+
+        echo "🔍 Verifying pinned SHA-256 on the archive..."
+        echo "${KUBECONFORM_SHA256}  ${TMP_DIR}/${KUBECONFORM_ARCHIVE}" | sha256sum -c -
+
+        echo "📦 Extracting and Installing..."
+        # Extract only the 'kubeconform' binary from the verified tarball
+        tar -xzf "${TMP_DIR}/${KUBECONFORM_ARCHIVE}" -C "$TMP_DIR" kubeconform
+
+        # Installing to the user's local bin avoids the need for sudo
+        mkdir -p "$HOME/.local/bin"
+        install -m 0755 "${TMP_DIR}/kubeconform" "$HOME/.local/bin/kubeconform"
+        echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+        echo "✅ Installed:"
+        kubeconform -v
