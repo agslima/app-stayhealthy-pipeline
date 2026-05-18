@@ -99,7 +99,7 @@ jobs:
           name: codeql-release-sarif
           path: codeql-release.sarif
 
-  trivy-release-scan:
+  static-risk-scan:
     name: Static Risk Profile
     timeout-minutes: 15
     needs: [ codeql-release-analysis ]
@@ -265,7 +265,7 @@ jobs:
     timeout-minutes: 10
     if: success()  # Ensure all scans passed
     runs-on: ubuntu-latest
-    needs: [ trivy-release-scan ]
+    needs: [ static-risk-scan ]
     permissions:
       contents: read
       id-token: write # For OIDC auth with Cosign
@@ -337,7 +337,6 @@ jobs:
       - name: Create static risk attestation predicate
         uses: ./.github/actions/security-gate/create-static-risk-attestation-predicate
         with:
-          trivy-file: trivy-downloads/trivy-${{ matrix.name }}.json
           decision-file: static-risk-downloads/opa-decision-${{ matrix.name }}.json
           evidence-file: static-risk-downloads/security-evidence-enriched-${{ matrix.name }}.json
           image-digest: ${{ matrix.image-digest }}
