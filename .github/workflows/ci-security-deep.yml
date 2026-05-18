@@ -139,7 +139,7 @@ jobs:
         continue-on-error: true
         id: gate
         env:
-          POLICY_SCRIPT: ${{ inputs.policy_script_path }}
+          POLICY_SCRIPT: ${{ inputs.policy_script_path || 'scripts/check-security-debt.sh' }}
         run: |
           set -euo pipefail
           chmod +x ${POLICY_SCRIPT}
