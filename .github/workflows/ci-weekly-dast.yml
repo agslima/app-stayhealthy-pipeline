@@ -44,7 +44,7 @@ jobs:
       MIN_BE_URLS: "10"
       FAIL_ON_LOW_URLS: "0"
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -75,13 +75,13 @@ jobs:
         run: make dast-weekly
       - name: Upload SARIF (Frontend)
         if: always()
-        uses: github/codeql-action/upload-sarif@9e0d7b8d25671d64c341c19c0152d693099fb5ba # v4.35.5
+        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
         with:
           sarif_file: app/zap-out/zap-frontend.sarif
           category: zap-frontend
       - name: Upload SARIF (Backend)
         if: always()
-        uses: github/codeql-action/upload-sarif@9e0d7b8d25671d64c341c19c0152d693099fb5ba # v4.35.5
+        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
         with:
           sarif_file: app/zap-out/zap-backend.sarif
           category: zap-backend
