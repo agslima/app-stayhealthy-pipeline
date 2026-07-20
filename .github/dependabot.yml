@@ -8,7 +8,7 @@ updates:
       - "/"
       - "/.github/actions/*"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "monday"
       time: "06:00"
       timezone: "America/Sao_Paulo"
@@ -32,7 +32,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/app/server"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "monday"
       time: "06:00"
       timezone: "America/Sao_Paulo"
@@ -64,7 +64,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/app/client"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "monday"
       time: "06:00"
       timezone: "America/Sao_Paulo"
@@ -95,7 +95,7 @@ updates:
   - package-ecosystem: "docker"
     directory: "/app/docker"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "monday"
       time: "06:00"
       timezone: "America/Sao_Paulo"
