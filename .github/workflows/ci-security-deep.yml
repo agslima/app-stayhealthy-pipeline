@@ -2,7 +2,8 @@ name: Daily Security Scan
 
 on:
   schedule:
-    - cron: "0 2 * * *"
+    - cron: "0 7 * * *" # Runs at 7:00
+      timezone: 'America/Sao_Paulo'
   workflow_dispatch: {}  # allow manual runs for testing
   workflow_call:
     inputs:
