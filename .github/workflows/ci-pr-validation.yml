@@ -141,7 +141,7 @@ jobs:
           cache-dependency-path: app/client/package-lock.json
       - name: Install dependencies
         working-directory: app/client
-        run: npm ci
+        run: npm ci --legacy-peer-deps # remove --legacy-peer-deps once all peer dependency issues are resolved eslint 
       - name: Lint
         working-directory: app/client
         run: npm run lint
