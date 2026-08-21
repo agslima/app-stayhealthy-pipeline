@@ -65,11 +65,13 @@
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
-    "eslint": "^9.39.5",
+    "@eslint/js": "^9.39.5",
+    "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-jest": "^29.16.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-security": "^4.0.1",
+    "globals": "^17.11.0",
     "jest": "^30.4.2",
     "supertest": "^7.1.4"
   },
