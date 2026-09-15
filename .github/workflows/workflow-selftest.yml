@@ -20,8 +20,10 @@ jobs:
     name: Lint workflows (actionlint)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: ./.github/actions/install-actionlint
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: agslima/app-stayhealthy-pipeline/.github/actions/install-actionlint@949f7854d0db87b46534073fb7416b9165469de7 # 0.7.0
       - name: Check workflow files
         run: actionlint -color
   
@@ -30,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check out repository
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         persist-credentials: false
@@ -38,7 +40,7 @@ jobs:
     # Note: adjust the policy_purl to refer to your repository URL.
     - name: Run Macaron action
       id: run_macaron
-      uses: oracle/macaron@4ddb55e3c9ef2c77b548be55c557078c4476fd9c # v0.24.0
+      uses: oracle/macaron@794eec32782979f577efb5ff71d585f683a3550f # v0.25.0
       with:
         repo_path: ./
         policy_file: check-github-actions

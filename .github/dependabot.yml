@@ -1,13 +1,19 @@
-# Please see the documentation for all configuration options: https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+# Please see the documentation for all configuration options:
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
 
 version: 2
 updates:
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directories: 
+      - "/"
+      - "/.github/actions/*"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "monday"
       time: "06:00"
+      timezone: "America/Sao_Paulo"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
     target-branch: main
     groups:
@@ -26,22 +32,18 @@ updates:
   - package-ecosystem: "npm"
     directory: "/app/server"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "monday"
       time: "06:00"
+      timezone: "America/Sao_Paulo"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
     target-branch: main
     groups:
       npm-dependencies:
         patterns:
           - "*"
-    ignore:
-      - dependency-name: "eslint"
-        versions:
-          - ">=10.0.0 <11.0.0"
-      - dependency-name: "@eslint/js"
-        versions:
-          - ">=10.0.0 <11.0.0"
     commit-message:
       prefix: ":robot:"
       include: "scope"
@@ -55,9 +57,12 @@ updates:
   - package-ecosystem: "npm"
     directory: "/app/client"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "monday"
       time: "06:00"
+      timezone: "America/Sao_Paulo"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
     target-branch: main
     groups:
@@ -67,10 +72,10 @@ updates:
     ignore:
       - dependency-name: "eslint"
         versions:
-          - ">=10.0.0 <11.0.0"
+          - ">=10.0.0 <10.9.0"
       - dependency-name: "@eslint/js"
         versions:
-          - ">=10.0.0 <11.0.0"
+          - ">=10.0.0 <10.9.0"
     commit-message:
       prefix: ":robot:"
       include: "scope"
@@ -83,9 +88,12 @@ updates:
   - package-ecosystem: "docker"
     directory: "/app/docker"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "monday"
       time: "06:00"
+      timezone: "America/Sao_Paulo"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
     target-branch: main
     commit-message:
@@ -95,5 +103,4 @@ updates:
       - "backend"
       - "docker"
       - "frontend"
-
-  
+      - "worker"

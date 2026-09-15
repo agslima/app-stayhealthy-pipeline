@@ -77,21 +77,22 @@ jobs:
       PLATFORMS: ${{ inputs.platforms }}
       GITHUB_SHA: ${{ inputs.github_sha }}
       DOCKER_USERNAME: ${{ inputs.dockerhub_username }}
+      GHCR_USERNAME: ${{ inputs.ghcr_username }}
     outputs:  
       image-digest: ${{ steps.build.outputs.digest }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit # change to block later 
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.GITHUB_SHA }}
           fetch-depth: 0
           persist-credentials: false
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v2.5.0
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
         with:
           # Forces the use of an isolated container for the build environment
           driver: docker-container
@@ -100,12 +101,12 @@ jobs:
             image=moby/buildkit@sha256:e5d9d1763945ca186d48cbf5b0ff3e062eb917fb8a80da6da87144edb7320a90
           buildkitd-flags: ""
       - name: Login to Docker Hub
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           username: ${{ inputs.dockerhub_username }}
           password: ${{ secrets.dockerhub_token }}
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ inputs.ghcr_username }}
@@ -117,12 +118,12 @@ jobs:
           echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_ENV"
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           # Automatically generate tags for both GHCR and Docker.
           images: |
-            docker.io/${{ inputs.dockerhub_username }}/${{ env.IMAGE_REPO}}
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_REPO }}
+            docker.io/${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_REPO}}
+            ghcr.io/${{ env.GHCR_USERNAME }}/${{ env.IMAGE_REPO }}
           tags: |
             type=raw,value=${{ env.RELEASE_TAG }},enable=${{ env.RELEASE_TAG != '' }}
             type=raw,value=${{ env.GITHUB_SHA }}
@@ -133,7 +134,7 @@ jobs:
             org.opencontainers.image.version=${{ env.RELEASE_TAG }}
       - name: Build & Push
         id: build
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v4.0.0
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: ${{ env.CONTEXT }}
           file: ${{ env.FILE }}
@@ -162,7 +163,7 @@ jobs:
           fi
           echo "$DIGEST" > "digests/digest-${DIGEST_ARTIFACT_NAME}"
       - name: Upload Digest Artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: digest-${{ env.IMAGE_REPO }}
           path: digests/digest-${{ env.IMAGE_REPO }}
@@ -178,6 +179,7 @@ jobs:
       IMAGE_REPO: ${{ inputs.image_repo }}
       GITHUB_SHA: ${{ inputs.github_sha }}
       DOCKER_USERNAME: ${{ inputs.dockerhub_username }}
+      GHCR_USERNAME: ${{ inputs.ghcr_username }}
       DIGEST: ${{ needs.build-publish.outputs.image-digest }}
     permissions:
       id-token: write          # Needed to get OIDC token for keyless signing
@@ -187,18 +189,18 @@ jobs:
       artifact-metadata: write # Needed to upload SBOM as artifact    
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
       - name: Install Cosign
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
       - name: Login to Docker Hub
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           username: ${{ inputs.dockerhub_username }}
           password: ${{ secrets.dockerhub_token }}
       - name: Login to GHCR
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ inputs.ghcr_username }}
@@ -207,8 +209,12 @@ jobs:
         run: |
           set -euo pipefail
           echo "DOCKER_IMAGE=docker.io/${DOCKER_USERNAME}/${IMAGE_REPO}@${DIGEST}" >> "$GITHUB_ENV"
-          echo "GHCR_IMAGE=ghcr.io/${{ github.repository_owner }}/${IMAGE_REPO}@${DIGEST}" >> "$GITHUB_ENV"
+          echo "GHCR_IMAGE=ghcr.io/${GHCR_USERNAME}/${IMAGE_REPO}@${DIGEST}" >> "$GITHUB_ENV"
       - name: Sign Images with Cosign
+        env:
+          REPOSITORY: ${{ github.repository }}
+          WORKFLOW: ${{ github.workflow }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
         run: |
           set -euo pipefail
           echo "Signing starts: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
@@ -220,15 +226,15 @@ jobs:
             echo "Signing image: $IMAGE"
             cosign sign --yes \
               --verbose \
-              -a "repo=${{ github.repository }}" \
-              -a "workflow=${{ github.workflow }}" \
-              -a "workflow_ref=${{ github.workflow_ref }}" \
+              -a "repo=${REPOSITORY}" \
+              -a "workflow=${WORKFLOW}" \
+              -a "workflow_ref=${WORKFLOW_REF}" \
               -a "ref=$GITHUB_SHA" \
               "$IMAGE"
           done
           echo "Signing finished: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
       - name: Generate SBOM
-        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
         with:
           # Targets the GHCR image to generate the SBOM (since digests match, the SBOM is identical)
           image: ${{ env.GHCR_IMAGE }}
@@ -264,6 +270,9 @@ jobs:
       id-token: write   # To sign the provenance.
       packages: write   # To upload assets to release.
       actions: read     # To read the workflow path.
+    # slsa-framework/slsa-github-generator doesn't support pinning version
+    # > Invalid ref: 68bad40844440577b33778c9f29077a3388838e9. Expected ref of the form refs/tags/vX.Y.Z
+    # https://github.com/slsa-framework/slsa-github-generator/issues/722
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
     with:
       image: ghcr.io/${{ inputs.ghcr_username }}/${{ inputs.image_repo }}
@@ -282,6 +291,9 @@ jobs:
       id-token: write   # To sign the provenance.
       packages: write   # To upload assets to release.
       actions: read     # To read the workflow path.
+    # slsa-framework/slsa-github-generator doesn't support pinning version
+    # > Invalid ref: 68bad40844440577b33778c9f29077a3388838e9. Expected ref of the form refs/tags/vX.Y.Z
+    # https://github.com/slsa-framework/slsa-github-generator/issues/722
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
     with:
       image: docker.io/${{ inputs.dockerhub_username }}/${{ inputs.image_repo }}
