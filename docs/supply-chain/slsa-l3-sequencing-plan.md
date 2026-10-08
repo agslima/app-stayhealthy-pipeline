@@ -2,7 +2,7 @@
 
 [//]: # (owner: Project Maintainers)
 [//]: # (review_cadence: Quarterly)
-[//]: # (last_reviewed: 2026-05-13)
+[//]: # (last_reviewed: 2026-10-08)
 
 This document turns the repository's existing "L3-aligned controls in progress" statement into an execution plan with explicit sequencing, validation, and rollback expectations.
 

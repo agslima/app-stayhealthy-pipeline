@@ -4,7 +4,7 @@
 
 - **Owner:** Project Maintainers
 - **Review cadence:** Quarterly
-- **Last reviewed:** 2026-03-22
+- **Last reviewed:** 2026-10-08
 
 ## Summary
 

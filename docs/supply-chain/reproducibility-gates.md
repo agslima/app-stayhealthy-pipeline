@@ -2,7 +2,7 @@
 
 [//]: # (owner: Project Maintainers)
 [//]: # (review_cadence: Quarterly)
-[//]: # (last_reviewed: 2026-05-14)
+[//]: # (last_reviewed: 2026-10-08)
 
 This document defines the reproducibility enforcement gates and historical pilot evidence for the release path across core system services.
 

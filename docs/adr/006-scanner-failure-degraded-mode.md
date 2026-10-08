@@ -2,7 +2,7 @@
 
 [//]: # (owner: Project Maintainers)
 [//]: # (review_cadence: Quarterly)
-[//]: # (last_reviewed: 2026-03-17)
+[//]: # (last_reviewed: 2026-10-08)
 
 [Back](005-break-glass-exception-handling.md) // [Home](../README.md) // [Next](007-supply-chain-incident-response-revocation.md)
 
