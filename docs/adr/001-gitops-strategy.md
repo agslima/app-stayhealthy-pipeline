@@ -2,7 +2,7 @@
 
 [//]: # (owner: Project Maintainers)
 [//]: # (review_cadence: Quarterly)
-[//]: # (last_reviewed: 2026-)
+[//]: # (last_reviewed: 2026-10-08)
 
 [Home](../README.md) // [Next](002-image-signing-attestation.md)
 
