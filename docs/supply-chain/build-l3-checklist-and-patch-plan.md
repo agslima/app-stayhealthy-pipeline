@@ -2,7 +2,7 @@
 
 [//]: # (owner: Project Maintainers)
 [//]: # (review_cadence: Quarterly)
-[//]: # (last_reviewed: 2026-05-16)
+[//]: # (last_reviewed: 2026-10-08)
 
 ## Goal
 

@@ -2,7 +2,7 @@
 
 [//]: # (owner: Project Maintainers)
 [//]: # (review_cadence: Quarterly)
-[//]: # (last_reviewed: 2026-04-11)
+[//]: # (last_reviewed: 2026-10-08)
 
 This walkthrough shows one successful phased backend rollout and one halted canary path.
 It is an example evidence package for reviewers and operators.

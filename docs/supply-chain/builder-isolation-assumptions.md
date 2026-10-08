@@ -2,7 +2,7 @@
 
 [//]: # (owner: Project Maintainers)
 [//]: # (review_cadence: Quarterly)
-[//]: # (last_reviewed: 2026-05-13)
+[//]: # (last_reviewed: 2026-10-08)
 
 This document records the repository's current builder-isolation assumptions for trusted release and promotion workflows.
 

@@ -2,7 +2,7 @@
 
 [//]: # (owner: Project Maintainers)
 [//]: # (review_cadence: Quarterly)
-[//]: # (last_reviewed: 2026-04-11)
+[//]: # (last_reviewed: 2026-10-08)
 
 <!--
 This plan is an implementation-aware review of repository alignment against the commitments in `README.md`, the documented governance model, and the active CI/CD controls.

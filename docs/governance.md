@@ -1,5 +1,9 @@
 # Delivery Governance Model
 
+[//]: # (owner: Project Maintainers)
+[//]: # (review_cadence: Quarterly)
+[//]: # (last_reviewed: 2026-10-08)
+
 > [!NOTE]
 > Objective: make governance controls difficult to bypass silently for standard contributors with write access, and ensure that trusted release and deployment paths remain policy-constrained, auditable, and verifiable.
 >

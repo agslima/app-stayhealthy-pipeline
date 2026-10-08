@@ -3,7 +3,7 @@
 ## Governance Metadata
 
 - **Validation cadence:** Quarterly
-- **Last validated:** 2026-03-11
+- **Last validated:** 2026-10-08
 
 ## Summary
 

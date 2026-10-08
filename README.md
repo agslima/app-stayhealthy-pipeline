@@ -2,7 +2,7 @@
 
 [//]: # (owner: Project Maintainers)
 [//]: # (review_cadence: Quarterly)
-[//]: # (last_reviewed: 2026-03-11)
+[//]: # (last_reviewed: 2026-10-08)
 [//]: # (Controls matrix: docs/governance-evidence-index.md)
 
 ## A Reference Implementation for CI/CD Governance, Supply Chain Security, and Runtime Policy Enforcement

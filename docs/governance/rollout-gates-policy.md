@@ -2,7 +2,7 @@
 
 [//]: # (owner: Project Maintainers)
 [//]: # (review_cadence: Quarterly)
-[//]: # (last_reviewed: 2026-04-11)
+[//]: # (last_reviewed: 2026-10-08)
 
 This document defines promotion gates for backend canary rollout in production.
 
