@@ -2,7 +2,7 @@
 
 [//]: # (owner: Project Maintainers)
 [//]: # (review_cadence: Quarterly)
-[//]: # (last_reviewed: 2026-04-11)
+[//]: # (last_reviewed: 2026-10-08)
 
 This repository is organized to separate application logic, infrastructure definition, and governance policies. That structure supports a shift-left model in which policy testing happens alongside application testing and delivery controls remain reviewable as code.
 
