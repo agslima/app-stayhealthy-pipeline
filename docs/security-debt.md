@@ -24,7 +24,6 @@
 | CVE | Severity | Component | Current Version | Fixed Version | Exploitability | Justification | Decision | Owner | Expires (YYYY-MM-DD) | Ticket/Link | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | CVE-2026-97058 | MEDIUM | npm: sprintf-js | sprintf-js 1.0.3 | - | Attack Vector: Network; Attack Complexity: Low | - | - | @agslima | 2026-10-15 | #402 | - |
-| - | - | - | - | - | - | - | - | - | - | - | - |
 
 ---
 
