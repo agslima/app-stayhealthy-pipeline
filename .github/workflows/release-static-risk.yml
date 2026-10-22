@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
       - name: Checkout repository
@@ -75,12 +75,12 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        uses: github/codeql-action/init@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
         with:
           languages: javascript-typescript
           build-mode: none
       - name: Run CodeQL analysis
-        uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        uses: github/codeql-action/analyze@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
         with:
           category: release-static-risk
           upload: never
@@ -94,7 +94,7 @@ jobs:
           jq -e '(.runs? // []) | type == "array"' "$CODEQL_FILE" >/dev/null
           cp "$CODEQL_FILE" codeql-release.sarif
       - name: Upload CodeQL SARIF artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: codeql-release-sarif
           path: codeql-release.sarif
@@ -130,7 +130,7 @@ jobs:
       DOCKER_USERNAME: ${{ inputs.dockerhub_username }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
       - name: Checkout repository
@@ -170,12 +170,12 @@ jobs:
           test -s "trivy-${NAME}.json" || (echo "::error::Trivy JSON missing/empty"; exit 1)
           jq -e '.Results? | type=="array"' "trivy-${NAME}.json" >/dev/null
       - name: Upload Trivy Scan Artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: trivy-results-${{ matrix.name }}
           path: trivy-${{ matrix.name }}.json
       - name: Download CodeQL SARIF artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: codeql-release-sarif
           path: static-risk-inputs/codeql
@@ -254,7 +254,7 @@ jobs:
           cp decision.json "opa-decision-${NAME}.json"
       - name: Upload static risk artifacts
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: static-risk-results-${{ matrix.name }}
           path: |
@@ -305,7 +305,7 @@ jobs:
             criticality: medium
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
       - name: Checkout repository
@@ -326,12 +326,12 @@ jobs:
           username: ${{ inputs.ghcr_username }}  
           password: ${{ secrets.ghcr_token }} 
       - name: Download Trivy scan artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: trivy-results-${{ matrix.name }}
           path: trivy-downloads
       - name: Download static risk artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: static-risk-results-${{ matrix.name }}
           path: static-risk-downloads

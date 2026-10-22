@@ -82,7 +82,7 @@ jobs:
       image-digest: ${{ steps.build.outputs.digest }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit # change to block later 
       - name: Checkout repository
@@ -163,7 +163,7 @@ jobs:
           fi
           echo "$DIGEST" > "digests/digest-${DIGEST_ARTIFACT_NAME}"
       - name: Upload Digest Artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: digest-${{ env.IMAGE_REPO }}
           path: digests/digest-${{ env.IMAGE_REPO }}
@@ -189,7 +189,7 @@ jobs:
       artifact-metadata: write # Needed to upload SBOM as artifact    
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
       - name: Install Cosign
@@ -234,7 +234,7 @@ jobs:
           done
           echo "Signing finished: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
       - name: Generate SBOM
-        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           # Targets the GHCR image to generate the SBOM (since digests match, the SBOM is identical)
           image: ${{ env.GHCR_IMAGE }}
