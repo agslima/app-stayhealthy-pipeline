@@ -130,11 +130,11 @@ async function getRefreshedAccessToken() {
  *
  * @param {string} url - API path to request.
  * @param {string} token - Current access token.
- * @param {object} [options={}] - Fetch init options.
  * @param {Function} [onTokenRefresh] - Optional callback for persisting a new token.
+ * @param {object} [options={}] - Fetch init options.
  * @returns {Promise<{response: Response, token: string}>} Final response and token used.
  */
-async function fetchWithTokenRefresh(url, token, options = {}, onTokenRefresh) {
+async function fetchWithTokenRefresh(url, token, onTokenRefresh, options = {}) {
   /**
    * Execute the request with the currently active bearer token.
    *
@@ -214,7 +214,6 @@ export async function getMyPrescriptions(token, onTokenRefresh) {
   const { response, token: activeToken } = await fetchWithTokenRefresh(
     '/api/v2/patient/me/prescriptions',
     token,
-    {},
     onTokenRefresh,
   );
 
@@ -240,7 +239,6 @@ export async function getMyPrescription(id, token, onTokenRefresh) {
   const { response, token: activeToken } = await fetchWithTokenRefresh(
     `/api/v2/patient/me/prescriptions/${prescriptionId}`,
     token,
-    {},
     onTokenRefresh,
   );
 
@@ -266,7 +264,6 @@ export async function getMfaStatus(token, onTokenRefresh) {
   const { response, token: activeToken } = await fetchWithTokenRefresh(
     '/api/v2/auth/mfa/status',
     token,
-    {},
     onTokenRefresh,
   );
 
@@ -291,12 +288,12 @@ export async function enrollMfa(token, label, onTokenRefresh) {
   const { response, token: activeToken } = await fetchWithTokenRefresh(
     '/api/v2/auth/mfa/enroll',
     token,
+    onTokenRefresh,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ label }),
     },
-    onTokenRefresh,
   );
 
   if (!response.ok) {
@@ -319,10 +316,10 @@ export async function disableMfa(token, onTokenRefresh) {
   const { response, token: activeToken } = await fetchWithTokenRefresh(
     '/api/v2/auth/mfa/disable',
     token,
+    onTokenRefresh,
     {
       method: 'POST',
     },
-    onTokenRefresh,
   );
 
   if (!response.ok) {
