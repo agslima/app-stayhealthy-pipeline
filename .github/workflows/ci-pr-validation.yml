@@ -313,7 +313,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install workflow provenance dependencies
-        run: python3 -m pip install --require-hashes -r scripts/supply-chain/requirements-workflow-provenance.txt
+        run: 'python3 -m pip install --require-hashes -r scripts/supply-chain/requirements-workflow-provenance.txt --only-binary :all:'
       - name: Check workflow input provenance
         run: make check-provenance
 
