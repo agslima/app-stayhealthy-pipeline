@@ -1,7 +1,7 @@
 # Delivery Governance Model
 
 [//]: # (owner: Project Maintainers)
-[//]: # (review_cadence: Quarterly)
+[//]: # (review_cadence: Semiannually)
 [//]: # (last_reviewed: 2026-10-08)
 
 > [!NOTE]
@@ -14,8 +14,8 @@ Within the trust boundaries described below, promotion toward production depends
 
 ## Governance Metadata and Freshness
 
-- **Validation cadence:** Quarterly
-- **Last validated:** 2026-04-23
+- **Validation cadence:** Semiannually
+- **Last validated:** 2026-10-08
 
 Governance metadata must remain current enough to support audit credibility. The repository enforces freshness with:
 

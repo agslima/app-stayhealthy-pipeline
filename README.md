@@ -1,7 +1,7 @@
 # Governed Software Delivery Pipeline
 
 [//]: # (owner: Project Maintainers)
-[//]: # (review_cadence: Quarterly)
+[//]: # (review_cadence: Semiannually)
 [//]: # (last_reviewed: 2026-10-08)
 [//]: # (Controls matrix: docs/governance-evidence-index.md)
 
