@@ -76,7 +76,9 @@
     "supertest": "^7.3.0"
   },
   "overrides": {
-    "glob": "^12.0.0",
+    "deepmerge": "4.1.1",
+    "glob": "^14.0.2",
+    "minimatch": "^11.0.1",
     "tar": "^7.5.3",
     "diff": "^8.0.3"
   },
