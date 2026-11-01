@@ -73,7 +73,8 @@ describe('Integration: Audit repository storage and queries', () => {
       throw new Error(
         `Unable to start integration database for audit.repository.test. ` +
           `Start it with app/scripts/test-db-compose.sh up or set TEST_DB_HOST/PORT/USER/PASS/NAME. ` +
-          `Details: ${message}`
+          `Details: ${message}`,
+        { cause: error }
       );
     }
     const config = getDbConfig();
